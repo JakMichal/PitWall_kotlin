@@ -100,61 +100,10 @@ fun ChangeScreen(
         }
     }
 }
-@Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Monaco Grand Prix", fontSize = 35.sp, color = Color.White)
-            Text(text = "Remaining", fontSize = 30.sp, color = Color.Red)
-            Text(text = "00:09:45:36", fontSize = 30.sp, color = Color.Red)
-            Image(
-                modifier = Modifier
-                    .background(Color.Transparent)
-                    .padding(top = 40.dp)
-                    .size(250.dp),
-                painter = painterResource(R.drawable.monaco_circuit),
-                contentDescription = "Monaco circuit",
-                colorFilter = ColorFilter.tint(Color.White),
 
-            )
-        }
-    }
-}
-@Composable
-fun ResultScreen(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Result - race result")
-    }
-}
-@Composable
-fun StatsScreen(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Stats - drivers and teams stats")
-    }
-}
-@Composable
-fun FavoriteScreen(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
 
-    ) {
-        Text(text = "Favorite")
-    }
-}
+
+
 
 @Preview(showBackground = true)
 @Composable
