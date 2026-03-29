@@ -1,9 +1,11 @@
 package com.example.pitwall
 
+import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pitwall.ui.theme.PitWallTheme
 
 class MainActivity : ComponentActivity() {
@@ -51,7 +55,8 @@ fun ChangeScreen(
     Scaffold { innerPadding ->
         Column(
             modifier.fillMaxSize()
-                .padding(innerPadding)
+                .background(color = Color.Black)
+                .padding(innerPadding),
         ) {
             Box(
                 modifier.weight(1f)
@@ -64,7 +69,8 @@ fun ChangeScreen(
                 }
             }
             Row(
-                modifier.fillMaxWidth(),
+                modifier.fillMaxWidth()
+                    .background(color = Color(0xff212121)),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
@@ -94,10 +100,18 @@ fun ChangeScreen(
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Home - closest race")
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Monaco Grand Prix", fontSize = 35.sp, color = Color.White)
+            Text(text = "Remaining", fontSize = 30.sp, color = Color.Red)
+            Text(text = "00:09:45:36", fontSize = 30.sp, color = Color.Red)
+        }
     }
 }
 @Composable
