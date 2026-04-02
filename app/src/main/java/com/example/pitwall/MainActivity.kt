@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallTheme
 
 class MainActivity : ComponentActivity() {
@@ -51,7 +52,7 @@ fun ChangeScreen(
     Scaffold { innerPadding ->
         Column(
             modifier.fillMaxSize()
-                .background(color = Color.Black)
+                .background(color = PitWallBackground)
                 .padding(innerPadding),
         ) {
             Box(
@@ -94,11 +95,7 @@ fun ChangeScreen(
     }
 }
 
-
-
-
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun HomeScreenPreview() {
     PitWallTheme {
