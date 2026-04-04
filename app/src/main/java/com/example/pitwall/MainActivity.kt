@@ -42,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallTheme
 
@@ -51,12 +52,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PitWallTheme {
+                val viewModel: F1ViewModel = viewModel()  // ← pridaj
                 var activeScreen by rememberSaveable { mutableStateOf("Home") }
                 ChangeScreen(
                     activeScreen = activeScreen,
-                    onScreenChange = { activeScreen = it }
+                    onScreenChange = { activeScreen = it },
+                    viewModel = viewModel  // ← pridaj
                 )
-
             }
 
         }
@@ -67,20 +69,22 @@ fun ChangeScreen(
     activeScreen: String,
     modifier: Modifier = Modifier,
     onScreenChange: (String) -> Unit,
+    viewModel: F1ViewModel
 ) {
     Scaffold(
         containerColor = PitWallBackground,
         bottomBar = {
             NavigationBar(
                 modifier = Modifier
-                    .padding(start = 15.dp, top = 2.dp, end = 15.dp, bottom = 10.dp)
+                    .padding(start = 15.dp, top = 2.dp, end = 15.dp, bottom = 17.dp)
                     .border(1.dp, Color.DarkGray, RoundedCornerShape(20.dp))
                     .clip(RoundedCornerShape(20.dp))
-                    .height(80.dp),
+                    .height(70.dp),
                 containerColor = MaterialTheme.colorScheme.surface,
 
             ) {
                 NavigationBarItem(
+                    modifier = Modifier.padding(top = 10.dp),
                     selected = activeScreen == "Home",
                     onClick = { onScreenChange("Home") },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home", modifier = Modifier.size(20.dp)) },
@@ -90,6 +94,7 @@ fun ChangeScreen(
                     ),
                 )
                 NavigationBarItem(
+                    modifier = Modifier.padding(top = 10.dp),
                     selected = activeScreen == "All Result",
                     onClick = { onScreenChange("All Result") },
                     icon = { Icon(painter = painterResource(R.drawable.result), contentDescription = "Result", modifier = Modifier.size(20.dp)) },
@@ -99,6 +104,7 @@ fun ChangeScreen(
                     ),
                 )
                 NavigationBarItem(
+                    modifier = Modifier.padding(top = 10.dp),
                     selected = activeScreen == "Stats",
                     onClick = { onScreenChange("Stats") },
                     icon = { Icon(painter = painterResource(R.drawable.stats), contentDescription = "Stats", modifier = Modifier.size(20.dp)) },
@@ -108,6 +114,7 @@ fun ChangeScreen(
                     ),
                 )
                 NavigationBarItem(
+                    modifier = Modifier.padding(top = 10.dp),
                     selected = activeScreen == "Schedule",
                     onClick = { onScreenChange("Schedule") },
                     icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = "Schedule", modifier = Modifier.size(20.dp)) },
@@ -117,6 +124,7 @@ fun ChangeScreen(
                     ),
                 )
                 NavigationBarItem(
+                    modifier = Modifier.padding(top = 10.dp),
                     selected = activeScreen == "Favourite",
                     onClick = { onScreenChange("Favourite") },
                     icon = { Icon(painter = painterResource(R.drawable.favorite), contentDescription = "Favourite", modifier = Modifier.size(20.dp)) },
@@ -135,7 +143,11 @@ fun ChangeScreen(
                     .padding(top = innerPadding.calculateTopPadding()),
             ) {
                 when (activeScreen) {
-                    "Home" -> HomeScreen(modifier, onScreenChange = onScreenChange)
+                    "Home" -> HomeScreen(
+                        modifier,
+                        onScreenChange = onScreenChange,
+                        viewModel = viewModel
+                    )
                     "All Result" -> ResultScreen()
                     "Stats" -> StatsScreen()
                     "Schedule" -> ScheduleScreen()
@@ -165,7 +177,8 @@ fun HomeScreenPreview() {
         var activeScreen by remember { mutableStateOf("Home") }
         ChangeScreen(
             activeScreen = activeScreen,
-            onScreenChange = { activeScreen = it }
+            onScreenChange = { activeScreen = it },
+            viewModel = F1ViewModel()
         )
     }
 }

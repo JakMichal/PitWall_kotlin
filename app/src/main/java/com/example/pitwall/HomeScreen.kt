@@ -22,15 +22,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +46,7 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -55,11 +60,14 @@ import com.example.pitwall.ui.theme.PitWallTheme
 import kotlin.math.round
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit) {
+fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, viewModel: F1ViewModel) {
+    val drivers by viewModel.driverStandings.collectAsState()
+    val constructors by viewModel.constructorStandings.collectAsState()
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
+        item { HeaderLogo()}
         item { NextRace() }
         item {
             Row(
@@ -68,12 +76,27 @@ fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit) 
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ToScreenButton("Schedule", onScreenChange, modifier.weight(1f))
-                ToScreenButton("All Result", onScreenChange, modifier.weight(1f))
+                ToScreenButton("Schedule", onScreenChange, R.drawable.calendar, modifier.weight(1f))
+                ToScreenButton("All Result", onScreenChange, R.drawable.result, modifier.weight(1f))
             }
         }
-        item { DriverChampionship() }
-        item { ContructorChampionship() }
+        item { DriverChampionship(drivers = drivers) }
+        item { ContructorChampionship(constructors = constructors) }
+    }
+}
+@Composable
+fun HeaderLogo() {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 16.dp)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.pitwall_logo),
+            contentDescription = "Pitwall logo",
+            modifier = Modifier
+                .height(28.dp)
+                .align(Alignment.CenterHorizontally)
+        )
     }
 }
 
@@ -82,7 +105,7 @@ fun NextRace(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp, 8.dp, 16.dp, 16.dp)
     ) {
         Text(text = "NEXT RACE", fontSize = 13.sp, color = Color.Red)
         Box(
@@ -145,7 +168,6 @@ fun NextRaceName() {
         Text(
             text = "Monaco Grand Prix",
             fontSize = 30.sp,
-            fontFamily = FontFamily.Cursive,
             fontWeight = FontWeight.Bold,
             color = Color.White,
         )
@@ -258,22 +280,31 @@ fun NextRaceCircuit() {
 }
 
 @Composable
-fun ToScreenButton(change:String, onScreenChange: (String) -> Unit, modifier: Modifier = Modifier) {
+fun ToScreenButton(change:String, onScreenChange: (String) -> Unit, drawable: Int,modifier: Modifier = Modifier) {
     OutlinedButton(
         onClick = { onScreenChange(change) },
-        modifier = modifier,
+        modifier = modifier.height(70.dp),
+        shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, Color.DarkGray),
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = Color.LightGray,
             containerColor = MaterialTheme.colorScheme.surface
         )
+
     ) {
-        Text(change)
+        Icon(
+            painter = painterResource(drawable),
+            contentDescription = "red_calendar_icon",
+            tint = Color.Red,
+            modifier = Modifier.size(50.dp).padding(end = 15.dp),
+        )
+        Text(change, fontSize =  17.5.sp)
+        Text(">", fontSize =  15.sp, color = Color.Gray, modifier = Modifier.padding(start = 10.dp))
     }
 }
 
 @Composable
-fun DriverChampionship(modifier: Modifier = Modifier) {
+fun DriverChampionship(drivers: List<Driver>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -292,9 +323,8 @@ fun DriverChampionship(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                val maxPoints = driverTop3.maxOf { it.points }
-
-                driverTop3.forEachIndexed { index, driver ->
+                val maxPoints = drivers.maxOfOrNull { it.points } ?: 0f
+                drivers.forEachIndexed { index, driver ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -309,7 +339,7 @@ fun DriverChampionship(modifier: Modifier = Modifier) {
                             lineHeight = 10.sp
                         )
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = driver.name, fontSize = 14.sp, color = Color.White, lineHeight = 10.sp)
+                            Text(text = driver.fullName, fontSize = 14.sp, color = Color.White, lineHeight = 10.sp)
                             Text(text = driver.team, fontSize = 12.sp, color = Color.Gray, lineHeight = 10.sp)
                         }
                         Text(text = "${driver.points} pts", fontSize = 14.sp, color = Color.Gray)
@@ -329,7 +359,7 @@ fun DriverChampionship(modifier: Modifier = Modifier) {
     }
 }
 @Composable
-fun ContructorChampionship(modifier: Modifier = Modifier) {
+fun ContructorChampionship(constructors: List<Constructor>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -349,9 +379,8 @@ fun ContructorChampionship(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                val maxPoints = constructorTop3.maxOf { it.points }
-
-                constructorTop3.forEachIndexed { index, constructor ->
+                val maxPoints = constructors.maxOfOrNull { it.points } ?: 0f
+                constructors.forEachIndexed { index, constructor ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -392,7 +421,8 @@ fun HomeScreenPrevieww() {
         var activeScreen by remember { mutableStateOf("Home") }
         ChangeScreen(
             activeScreen = activeScreen,
-            onScreenChange = { activeScreen = it }
+            onScreenChange = { activeScreen = it },
+            viewModel = F1ViewModel()
         )
     }
 }
