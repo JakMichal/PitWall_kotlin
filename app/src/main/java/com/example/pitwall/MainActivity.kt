@@ -95,10 +95,10 @@ fun ChangeScreen(
                 )
                 NavigationBarItem(
                     modifier = Modifier.padding(top = 10.dp),
-                    selected = activeScreen == "All Result",
-                    onClick = { onScreenChange("All Result") },
-                    icon = { Icon(painter = painterResource(R.drawable.result), contentDescription = "Result", modifier = Modifier.size(20.dp)) },
-                    label = { Text("Result") },
+                    selected = activeScreen == "Schedule",
+                    onClick = { onScreenChange("Schedule") },
+                    icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = "Schedule", modifier = Modifier.size(20.dp)) },
+                    label = { Text("Schedule") },
                     colors = NavigationBarItemDefaults.colors (
                         indicatorColor = Color.Red
                     ),
@@ -109,16 +109,6 @@ fun ChangeScreen(
                     onClick = { onScreenChange("Stats") },
                     icon = { Icon(painter = painterResource(R.drawable.stats), contentDescription = "Stats", modifier = Modifier.size(20.dp)) },
                     label = { Text("Stats") },
-                    colors = NavigationBarItemDefaults.colors (
-                        indicatorColor = Color.Red
-                    ),
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(top = 10.dp),
-                    selected = activeScreen == "Schedule",
-                    onClick = { onScreenChange("Schedule") },
-                    icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = "Schedule", modifier = Modifier.size(20.dp)) },
-                    label = { Text("Schedule") },
                     colors = NavigationBarItemDefaults.colors (
                         indicatorColor = Color.Red
                     ),
@@ -150,7 +140,8 @@ fun ChangeScreen(
                     )
                     "All Result" -> ResultScreen()
                     "Stats" -> StatsScreen()
-                    "Schedule" -> ScheduleScreen()
+                    "Schedule" -> ScheduleScreen(
+                        viewModel = viewModel)
                     "Favourite" -> FavouriteScreen()
                 }
                 Box(
@@ -174,11 +165,12 @@ fun ChangeScreen(
 @Composable
 fun HomeScreenPreview() {
     PitWallTheme {
+        val viewModel: F1ViewModel = viewModel()
         var activeScreen by remember { mutableStateOf("Home") }
         ChangeScreen(
             activeScreen = activeScreen,
             onScreenChange = { activeScreen = it },
-            viewModel = F1ViewModel()
+            viewModel = viewModel
         )
     }
 }

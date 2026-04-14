@@ -1,7 +1,5 @@
 package com.example.pitwall
 
-import android.R.color.transparent
-import android.R.id.bold
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,12 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.materialIcon
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,29 +39,30 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pitwall.ui.theme.PitWallBackground
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pitwall.ui.theme.PitWallTheme
-import kotlin.math.round
+import kotlinx.coroutines.delay
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, viewModel: F1ViewModel) {
     val drivers by viewModel.driverStandings.collectAsState()
     val constructors by viewModel.constructorStandings.collectAsState()
+    val nextRace by viewModel.nextRace.collectAsState()
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         item { HeaderLogo()}
-        item { NextRace() }
+        item { nextRace?.let { race -> NextRace(race) } }
         item {
             Row(
                 modifier = Modifier
@@ -80,8 +74,8 @@ fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, 
                 ToScreenButton("All Result", onScreenChange, R.drawable.result, modifier.weight(1f))
             }
         }
-        item { DriverChampionship(drivers = drivers) }
-        item { ContructorChampionship(constructors = constructors) }
+        item { DriverChampionship(drivers = drivers.take(3)) }
+        item { ContructorChampionship(constructors = constructors.take(3)) }
     }
 }
 @Composable
@@ -101,9 +95,9 @@ fun HeaderLogo() {
 }
 
 @Composable
-fun NextRace(modifier: Modifier = Modifier) {
+fun NextRace(nextRace: Race) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp, 8.dp, 16.dp, 16.dp)
     ) {
@@ -113,25 +107,26 @@ fun NextRace(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .height(305.dp)
                 .clip(RoundedCornerShape(10.dp))
+                .border(1.dp, Color.DarkGray, RoundedCornerShape(10.dp))
         ) {
-            NextRaceCard()
-            NextRaceBackground()
+            NextRaceCard(nextRace)
+            BlackOverlay()
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                NextRaceName()
-                NextRaceCircuit()
-                NextRaceTimer()
+                NextRaceName(nextRace)
+                NextRaceCircuit(nextRace)
+                NextRaceTimer(nextRace)
              }
         }
     }
 }
 
 @Composable
-fun NextRaceCard() {
+fun NextRaceCard(nextRace: Race) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -141,7 +136,7 @@ fun NextRaceCard() {
             .clip(RoundedCornerShape(10.dp))
             .size(305.dp)
             .paint(
-                painterResource(R.drawable.monaco_background),
+                painterResource(nextRace.backgroundImage),
                 contentScale = ContentScale.Crop,
             )
 
@@ -149,7 +144,7 @@ fun NextRaceCard() {
 }
 
 @Composable
-fun NextRaceBackground() {
+fun BlackOverlay() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,32 +154,47 @@ fun NextRaceBackground() {
 }
 
 @Composable
-fun NextRaceName() {
+fun NextRaceName(nextRace: Race) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, bottom = 10.dp),
     ) {
         Text(
-            text = "Monaco Grand Prix",
+            text = nextRace.raceName,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
         )
         Row() {
             Text(
-                text = "Circuit de Monaco",
+                text = nextRace.circuitName,
                 fontSize = 15.sp,
                 color = Color.LightGray
             )
             Text(text = " • ", fontSize = 15.sp, color = Color.LightGray)
-            Text(text = "Round 8", fontSize = 15.sp, color = Color.LightGray)
+            Text(text = "Round ${nextRace.round}", fontSize = 15.sp, color = Color.LightGray)
         }
     }
 }
 
 @Composable
-fun NextRaceTimer() {
+fun NextRaceTimer(nextRace: Race) {
+    var totalSeconds by remember { mutableStateOf(0L) }
+    val days = totalSeconds / 86400
+    val hours = (totalSeconds % 86400) / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            totalSeconds = ChronoUnit.SECONDS.between(
+                LocalDateTime.now(),
+                nextRace.getRaceDateTime()
+            )
+            delay(1000L)
+        }
+    }
     Box(modifier = Modifier
         .background(
         brush = Brush.verticalGradient(
@@ -212,7 +222,7 @@ fun NextRaceTimer() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "02",
+                        text = days.toString().padStart(2, '0'),
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
@@ -224,7 +234,7 @@ fun NextRaceTimer() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "15",
+                        text = hours.toString().padStart(2, '0'),
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
@@ -236,7 +246,7 @@ fun NextRaceTimer() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "38",
+                        text = minutes.toString().padStart(2, '0'),
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
@@ -253,7 +263,7 @@ fun NextRaceTimer() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "22",
+                        text = seconds.toString().padStart(2, '0'),
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
@@ -267,14 +277,14 @@ fun NextRaceTimer() {
 }
 
 @Composable
-fun NextRaceCircuit() {
+fun NextRaceCircuit(nextRace: Race) {
     Image(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp, 16.dp),
+            .padding(27.dp, 27.dp),
         contentScale = ContentScale.Fit,
-        painter = painterResource(R.drawable.monaco_circuit),
-        contentDescription = "Monaco circuit",
+        painter = painterResource(nextRace.circuitImage),
+        contentDescription = nextRace.circuitName,
         colorFilter = ColorFilter.tint(Color.White),
     )
 }
@@ -418,11 +428,12 @@ fun ContructorChampionship(constructors: List<Constructor>) {
 @Composable
 fun HomeScreenPrevieww() {
     PitWallTheme {
+        val viewModel: F1ViewModel = viewModel()
         var activeScreen by remember { mutableStateOf("Home") }
         ChangeScreen(
             activeScreen = activeScreen,
             onScreenChange = { activeScreen = it },
-            viewModel = F1ViewModel()
+            viewModel = viewModel
         )
     }
 }

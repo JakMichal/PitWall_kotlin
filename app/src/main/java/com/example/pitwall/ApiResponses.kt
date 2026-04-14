@@ -11,12 +11,6 @@ data class DriverResponse(
     @SerializedName("nationality") val nationality: String
 )
 
-data class ConstructorResponse(
-    @SerializedName("constructorId") val constructorId: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("nationality") val nationality: String,
-)
-
 data class DriverStandingResponse(
     @SerializedName("position") val position: String,
     @SerializedName("points") val points: String,
@@ -25,36 +19,30 @@ data class DriverStandingResponse(
     @SerializedName("Constructors") val constructors: List<ConstructorResponse>,
 )
 
-data class StandingsListResponse(
+data class DriverStandingsListResponse(
     @SerializedName("DriverStandings")
     val driverStandings: List<DriverStandingResponse>
 )
 
-data class StandingsTableResponse(
+data class DriverStandingsTableResponse(
     @SerializedName("StandingsLists")
-    val standingsLists: List<StandingsListResponse>
+    val standingsLists: List<DriverStandingsListResponse>
 )
 
-data class MRDataResponse(
+data class DriverMRDataResponse(
     @SerializedName("StandingsTable")
-    val standingsTable: StandingsTableResponse
+    val standingsTable: DriverStandingsTableResponse
 )
 
 data class DriverStandingsApiResponse(
     @SerializedName("MRData")
-    val mrData: MRDataResponse
+    val mrData: DriverMRDataResponse
 )
 
-data class ConstructorStandingsApiResponse(
-    @SerializedName("MRData") val mrData: ConstructorMRDataResponse  // ← správny typ
-)
-
-data class RaceScheduleApiResponse(
-    @SerializedName("MRData") val mrData: MRDataResponse
-)
-
-data class RaceResultsApiResponse(
-    @SerializedName("MRData") val mrData: MRDataResponse
+data class ConstructorResponse(
+    @SerializedName("constructorId") val constructorId: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("nationality") val nationality: String,
 )
 
 data class ConstructorStandingResponse(
@@ -78,3 +66,48 @@ data class ConstructorMRDataResponse(
     @SerializedName("StandingsTable")
     val standingsTable: ConstructorStandingsTableResponse
 )
+
+data class ConstructorStandingsApiResponse(
+    @SerializedName("MRData") val mrData: ConstructorMRDataResponse  // ← správny typ
+)
+
+data class CircuitResponse(
+    @SerializedName("circuitId") val circuitId: String,
+    @SerializedName("circuitName") val circuitName: String,
+    @SerializedName("Location") val location: LocationResponse,
+)
+
+data class LocationResponse(
+    @SerializedName("country") val country: String,
+)
+
+data class RacesResponse(
+    @SerializedName("round") val round: String,
+    @SerializedName("raceName") val raceName: String,
+    @SerializedName("Circuit") val circuit: CircuitResponse,
+    @SerializedName("date") val date: String,
+    @SerializedName("time") val time: String,
+)
+
+data class RaceTableResponse(
+    @SerializedName("Races")
+    val Races: List<RacesResponse>
+)
+
+data class RacesMRDataResponse(
+    @SerializedName("RaceTable")
+    val raceTable: RaceTableResponse
+)
+
+
+data class RaceScheduleApiResponse(
+    @SerializedName("MRData") val mrData: RacesMRDataResponse
+)
+
+//data class RaceResultsApiResponse(
+//    @SerializedName("MRData") val mrData: MRDataResponse
+//)
+
+
+
+
