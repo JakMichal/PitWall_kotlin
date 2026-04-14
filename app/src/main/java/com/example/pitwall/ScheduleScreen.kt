@@ -65,6 +65,7 @@ fun ScheduleScreen(viewModel: F1ViewModel) {
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         item { HeaderLogo()}
+        item { Text("SEASON ${LocalDate.now().year}", color = Color.Red, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 8.dp))}
         items(races) { race -> RaceCard(race, nextRace)}
     }
 }
