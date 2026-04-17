@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, viewModel: F1ViewModel) {
+fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, viewModel: F1ViewModel) {
     val drivers by viewModel.driverStandings.collectAsState()
     val constructors by viewModel.constructorStandings.collectAsState()
     val nextRace by viewModel.nextRace.collectAsState()
@@ -62,7 +63,7 @@ fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, 
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         item { HeaderLogo()}
-        item { nextRace?.let { race -> NextRace(race) } }
+        item { nextRace?.let { race -> NextRace(race, onRaceClick) } }
         item {
             Row(
                 modifier = Modifier
@@ -71,7 +72,7 @@ fun HomeScreen(modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, 
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ToScreenButton("Schedule", onScreenChange, R.drawable.calendar, modifier.weight(1f))
-                ToScreenButton("All Result", onScreenChange, R.drawable.result, modifier.weight(1f))
+                ToScreenButton("Stats", onScreenChange, R.drawable.result, modifier.weight(1f))
             }
         }
         item { DriverChampionship(drivers = drivers.take(3)) }
@@ -95,7 +96,7 @@ fun HeaderLogo() {
 }
 
 @Composable
-fun NextRace(nextRace: Race) {
+fun NextRace(nextRace: Race, onRaceClick: (Race) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -104,6 +105,7 @@ fun NextRace(nextRace: Race) {
         Text(text = "NEXT RACE", fontSize = 13.sp, color = Color.Red)
         Box(
             modifier = Modifier
+                .clickable { onRaceClick(nextRace) }
                 .fillMaxWidth()
                 .height(305.dp)
                 .clip(RoundedCornerShape(10.dp))
@@ -342,7 +344,7 @@ fun DriverChampionship(drivers: List<Driver>) {
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            text = "${index + 1}",
+                            text = "${index + 1}.",
                             fontSize = 16.sp,
                             color = Color.Red,
                             modifier = Modifier.width(24.dp),
@@ -398,7 +400,7 @@ fun ContructorChampionship(constructors: List<Constructor>) {
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            text = "${index + 1}",
+                            text = "${index + 1}.",
                             fontSize = 16.sp,
                             color = Color.Red,
                             modifier = Modifier.width(24.dp)

@@ -81,12 +81,24 @@ data class LocationResponse(
     @SerializedName("country") val country: String,
 )
 
+data class dateTimeResponse(
+    @SerializedName("date") val date: String,
+    @SerializedName("time") val time: String,
+)
+
 data class RacesResponse(
     @SerializedName("round") val round: String,
     @SerializedName("raceName") val raceName: String,
     @SerializedName("Circuit") val circuit: CircuitResponse,
     @SerializedName("date") val date: String,
     @SerializedName("time") val time: String,
+    @SerializedName("Results") val results: List<RaceResultItemResponse> = emptyList(),
+    @SerializedName("FirstPractice") val firstPractice: dateTimeResponse? = null,
+    @SerializedName("SecondPractice") val secondPractice: dateTimeResponse? = null,
+    @SerializedName("ThirdPractice") val thirdPractice: dateTimeResponse? = null,
+    @SerializedName("Qualifying") val qualifying: dateTimeResponse? = null,
+    @SerializedName("Sprint") val sprint: dateTimeResponse? = null,
+    @SerializedName("SprintQualifying") val sprintQualifying: dateTimeResponse? = null,
 )
 
 data class RaceTableResponse(
@@ -98,15 +110,31 @@ data class RacesMRDataResponse(
     @SerializedName("RaceTable")
     val raceTable: RaceTableResponse
 )
-
-
 data class RaceScheduleApiResponse(
     @SerializedName("MRData") val mrData: RacesMRDataResponse
 )
 
-//data class RaceResultsApiResponse(
-//    @SerializedName("MRData") val mrData: MRDataResponse
-//)
+data class ResultDriverResponse(
+    @SerializedName("givenName") val firstName: String,
+    @SerializedName("familyName") val lastName: String,
+    @SerializedName("code") val code: String,
+)
+
+data class RaceResultItemResponse(
+    @SerializedName("position") val position: String,
+    @SerializedName("points") val points: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("Driver") val driver: ResultDriverResponse,
+    @SerializedName("Constructor") val constructor: ConstructorResponse,
+)
+
+data class RaceResultMRDataResponse(
+    @SerializedName("RaceTable") val raceTable: RaceTableResponse
+)
+
+data class RaceResultsApiResponse(
+    @SerializedName("MRData") val mrData: RaceResultMRDataResponse
+)
 
 
 

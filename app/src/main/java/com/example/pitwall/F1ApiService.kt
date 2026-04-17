@@ -12,6 +12,8 @@ interface F1ApiService {
     @GET("current.json")
     suspend fun getRaceSchedule(): RaceScheduleApiResponse
 
-//    @GET("current/results.json")
-//    suspend fun getRaceResults(): RaceResultsApiResponse
+    @GET("current/results.json?limit=1000")
+    suspend fun getRaceResults(): RaceResultsApiResponse
+
+
 }

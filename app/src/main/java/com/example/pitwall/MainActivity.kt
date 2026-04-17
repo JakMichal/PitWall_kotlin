@@ -5,29 +5,41 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,13 +50,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallTheme
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +74,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PitWallTheme {
                 val viewModel: F1ViewModel = viewModel()  // ← pridaj
-                var activeScreen by rememberSaveable { mutableStateOf("Home") }
+                var activeScreen by rememberSaveable { mutableStateOf("Stats") }
                 ChangeScreen(
                     activeScreen = activeScreen,
                     onScreenChange = { activeScreen = it },
@@ -64,6 +85,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeScreen(
     activeScreen: String,
@@ -71,6 +93,21 @@ fun ChangeScreen(
     onScreenChange: (String) -> Unit,
     viewModel: F1ViewModel
 ) {
+    var showBottomSheet by remember { mutableStateOf(false)}
+    var selectedRace by remember { mutableStateOf<Race?>(null)}
+    val raceResult by viewModel.raceResult.collectAsState()
+
+    if  (showBottomSheet) {
+        selectedRace?.let { race ->
+            ModalBottomSheet(
+                onDismissRequest = { showBottomSheet = false },
+                containerColor = PitWallBackground
+            ) {
+                RaceDetailSheet(race = race, raceResult = raceResult)
+            }
+        }
+    }
+
     Scaffold(
         containerColor = PitWallBackground,
         bottomBar = {
@@ -134,14 +171,24 @@ fun ChangeScreen(
             ) {
                 when (activeScreen) {
                     "Home" -> HomeScreen(
+                        onRaceClick = { race ->
+                            selectedRace = race
+                            showBottomSheet = true
+                        },
                         modifier,
                         onScreenChange = onScreenChange,
                         viewModel = viewModel
                     )
-                    "All Result" -> ResultScreen()
-                    "Stats" -> StatsScreen()
+                    "Stats" -> StatsScreen(
+                        viewModel = viewModel
+                    )
                     "Schedule" -> ScheduleScreen(
-                        viewModel = viewModel)
+                        viewModel = viewModel,
+                        onRaceClick = { race ->
+                            selectedRace = race
+                            showBottomSheet = true
+                        }
+                        )
                     "Favourite" -> FavouriteScreen()
                 }
                 Box(
@@ -159,6 +206,164 @@ fun ChangeScreen(
 
 
     }
+}
+
+@Composable
+fun RaceDetailSheet(
+    race: Race,
+    raceResult: List<RaceResult>,
+) {
+    val results = raceResult.find { it.round == race.round }
+    val isFinished = results != null && results.results.isNotEmpty()
+    var selectedTab by remember { mutableStateOf(0)}
+    val tabs = if (isFinished) {
+            listOf("Results", "Circuit", "Schedule")
+         } else {
+            listOf("Circuit", "Schedule")
+         }
+
+    Column(
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text(race.raceName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        TabRow(
+            selectedTab,
+            containerColor = MaterialTheme.colorScheme.background
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = {selectedTab = index},
+                    text = { Text(title)}
+                )
+            }
+        }
+        when (tabs[selectedTab]) {
+            "Results" -> ResultDetailSheet(results!!)
+            "Circuit" -> CircuitDetailSheet(race)
+            "Schedule" -> ScheduleDetailSheet(race)
+        }
+    }
+}
+
+@Composable
+fun ResultDetailSheet(result: RaceResult) {
+    val maxPoints = result.results.maxOfOrNull { it.points } ?: 0f
+    LazyColumn {
+        itemsIndexed(result.results) { index, driverResult ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp, 12.dp, 12.dp, 4.dp),
+                verticalAlignment = Alignment.Top,
+
+            ) {
+                Text("${index + 1}.", fontWeight = FontWeight.Bold, color = Color.Red, modifier = Modifier.width(24.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(driverResult.driverName, color = Color.White)
+                    Text(driverResult.team, color = Color.Gray, fontSize = 12.sp)
+                }
+                Text("${driverResult.points} pts", color = Color.Gray)
+            }
+            LinearProgressIndicator(
+                progress = { driverResult.points / maxPoints.toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp, 0.dp, 12.dp, 6.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = Color.DarkGray,
+                drawStopIndicator = {}
+            )
+            HorizontalDivider(color = Color.DarkGray, thickness = 1.dp)
+        }
+    }
+}
+@Composable
+fun CircuitDetailSheet(race: Race) {
+    Column(
+        modifier = Modifier.padding(top = 8.dp)
+    ) {
+        Text(race.country, fontSize = 20.sp, )
+        Text(race.circuitName, fontSize = 18.sp, color = Color.LightGray)
+        Image(
+            painter = painterResource(race.circuitImage),
+            contentDescription = race.circuitName,
+            modifier = Modifier.fillMaxWidth().height(200.dp).padding(top = 16.dp),
+            contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(Color.White),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Card(
+                modifier = Modifier.weight(1f),
+                border = BorderStroke(1.dp, Color.DarkGray),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(race.laps.toString(), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("Laps", color = Color.Gray, fontSize = 12.sp)
+                }
+            }
+            Card(
+                modifier = Modifier.weight(1f),
+                border = BorderStroke(1.dp, Color.DarkGray),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("${race.length} km", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("Lap length", color = Color.Gray, fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+@Composable
+fun ScheduleDetailSheet(race: Race) {
+    Column(modifier = Modifier.padding(top = 8.dp)) {
+        race.firstPractice?.let { SessionRow("Practice 1", it.first, it.second) }
+        race.secondPractice?.let { SessionRow("Practice 2", it.first, it.second) }
+        race.thirdPractice?.let { SessionRow("Practice 3", it.first, it.second) }
+        race.sprintQualifying?.let { SessionRow("Sprint Qualifying", it.first, it.second) }
+        race.sprint?.let { SessionRow("Sprint", it.first, it.second) }
+        race.qualifying?.let { SessionRow("Qualifying", it.first, it.second) }
+        SessionRow("Race", race.date, race.time)
+    }
+}
+@Composable
+fun SessionRow(name: String, date: String, time: String) {
+    val fullTime = if (time.length < 8) "$time:00" else time
+    val local = LocalDateTime.parse(
+        "${date}T${fullTime.substring(0, 8)}",
+        DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    )
+        .atZone(ZoneOffset.UTC)
+        .withZoneSameInstant(ZoneId.systemDefault())
+        .toLocalDateTime()
+
+    val formattedDate = local.toLocalDate()
+        .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+    val formattedTime = local.toLocalTime()
+        .format(DateTimeFormatter.ofPattern("HH:mm"))
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+        Column(horizontalAlignment = Alignment.End) {
+            Text(formattedDate, color = Color.White)
+            Text("$formattedTime local", color = Color.Gray, fontSize = 15.sp)
+        }
+    }
+    HorizontalDivider(color = Color.DarkGray)
 }
 
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)

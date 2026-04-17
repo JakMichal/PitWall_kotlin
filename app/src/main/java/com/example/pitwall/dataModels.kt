@@ -42,7 +42,13 @@ data class Race(
     val laps: Int = circuitLaps[circuitId] ?: 0,
     val length: Double = circuitLength[circuitId] ?: 0.0,
     val backgroundImage: Int = circuitBackgrounds[circuitId] ?: 0,
-    val circuitImage: Int = circuitTrackImages[circuitId] ?: 0
+    val circuitImage: Int = circuitTrackImages[circuitId] ?: 0,
+    val firstPractice: Pair<String, String>? = null,
+    val secondPractice: Pair<String, String>? = null,
+    val thirdPractice: Pair<String, String>? = null,
+    val qualifying: Pair<String, String>? = null,
+    val sprint: Pair<String, String>? = null,
+    val sprintQualifying: Pair<String, String>? = null,
 ) {
     fun getRaceDateTime() : LocalDateTime {
         val dateTime = "${date}T${time}:00"
@@ -60,7 +66,7 @@ data class DriverResult(
     val driverCode: String,
     val driverName: String,
     val team: String,
-    val points: Float,
+    val points: Int,
     val status: String
 )
 

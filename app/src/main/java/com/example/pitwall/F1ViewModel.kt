@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import kotlin.Int
-import kotlin.String
 
 class F1ViewModel : ViewModel() {
 
@@ -25,11 +23,18 @@ class F1ViewModel : ViewModel() {
     private val _nextRace = MutableStateFlow<Race?>(null)
     val nextRace: StateFlow<Race?> = _nextRace
 
+    private val _raceResult = MutableStateFlow<List<RaceResult>>(emptyList())
+    val raceResult: StateFlow<List<RaceResult>> = _raceResult
+
     init {
         loadDriverStandings()
         loadConstructorStandings()
         loadRaces()
+        loadRaceResults()
     }
+
+
+
     private fun loadDriverStandings() {
         viewModelScope.launch {
             try {
@@ -86,7 +91,6 @@ class F1ViewModel : ViewModel() {
                 val response = RetrofitInstance.api.getRaceSchedule()
                 val races = response.mrData.raceTable.Races
                 _races.value = races.map { race ->
-                    println("circuitId: ${race.circuit.circuitId}")
                     Race(
                         round = race.round.toInt(),
                         raceName = race.raceName,
@@ -94,8 +98,13 @@ class F1ViewModel : ViewModel() {
                         circuitName = race.circuit.circuitName,
                         country = race.circuit.location.country,
                         date = race.date,
-                        time = race.time.substring(0, 5)
-
+                        time = race.time.substring(0, 5),
+                        firstPractice = race.firstPractice?.let { Pair(it.date, it.time) },
+                        secondPractice = race.secondPractice?.let { Pair(it.date, it.time) },
+                        thirdPractice = race.thirdPractice?.let { Pair(it.date, it.time) },
+                        qualifying = race.qualifying?.let { Pair(it.date, it.time) },
+                        sprint = race.sprint?.let { Pair(it.date, it.time) },
+                        sprintQualifying = race.sprintQualifying?.let { Pair(it.date, it.time) },
                     )
                 }
                 loadNextRace()
@@ -112,5 +121,36 @@ class F1ViewModel : ViewModel() {
             .minByOrNull { race -> ChronoUnit.SECONDS.between(
                 LocalDateTime.now(),
                 race.getRaceDateTime()) }
+    }
+
+    private fun loadRaceResults() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitInstance.api.getRaceResults()
+                val races = response.mrData.raceTable.Races
+                _raceResult.value = races.map { raceResult ->
+                    RaceResult(
+                        round = raceResult.round.toInt(),
+                        raceName = raceResult.raceName,
+                        circuitName = raceResult.circuit.circuitName,
+                        country = raceResult.circuit.location.country,
+                        date = raceResult.date,
+                        results = raceResult.results.map { result ->
+                            DriverResult (
+                                position = result.position.toInt(),
+                                driverCode = result.driver.code,
+                                driverName = "${result.driver.firstName} ${result.driver.lastName}",
+                                team = result.constructor.name,
+                                points = result.points.toInt(),
+                                status = result.status
+                            )
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                // zatiaľ len vypíšeme chybu
+                e.printStackTrace()
+            }
+        }
     }
 }

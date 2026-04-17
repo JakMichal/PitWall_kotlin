@@ -3,6 +3,7 @@ package com.example.pitwall
 import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun ScheduleScreen(viewModel: F1ViewModel) {
+fun ScheduleScreen(viewModel: F1ViewModel, onRaceClick: (Race) -> Unit) {
     val races by viewModel.races.collectAsState()
     val nextRace by viewModel.nextRace.collectAsState()
     val nextRaceIndex = races.indexOfFirst{ it == nextRace }
@@ -66,12 +67,12 @@ fun ScheduleScreen(viewModel: F1ViewModel) {
     ) {
         item { HeaderLogo()}
         item { Text("SEASON ${LocalDate.now().year}", color = Color.Red, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 8.dp))}
-        items(races) { race -> RaceCard(race, nextRace)}
+        items(races) { race -> RaceCard(race, nextRace, onRaceClick)}
     }
 }
 
 @Composable
-fun RaceCard(currentRace: Race, nextRace : Race?) {
+fun RaceCard(currentRace: Race, nextRace : Race?, onRaceClick: (Race) -> Unit) {
 
     val status = ChronoUnit.SECONDS.between(
         LocalDateTime.now(),
@@ -89,6 +90,7 @@ fun RaceCard(currentRace: Race, nextRace : Race?) {
     }
     Box(
         modifier = Modifier
+            .clickable { onRaceClick(currentRace) }
             .padding(16.dp, 15.dp)
             .height(200.dp)
             .clip(RoundedCornerShape(10.dp))
