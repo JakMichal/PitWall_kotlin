@@ -8,11 +8,18 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+//ViewModel je trieda, ktorá prežije rotáciu obrazovky.
+//keby data boli v composable pri otoceni mobilu by sa vsetko stratilo
+//viewmodel zije dlhsie ako UI
 class F1ViewModel : ViewModel() {
 
+    //_driverStandings - konvencia oznacenie aby sme vedeli ze je sukromna a iba viewModel
+    //don moze zapisovat
     private val _driverStandings = MutableStateFlow<List<Driver>>(emptyList())
     val driverStandings: StateFlow<List<Driver>> = _driverStandings
-
+    //verejny iba na citanie pre UI
+    //StateFlow je reaktívny stream, ked sa zmeni hodnota vsetky composable ktore ho sleduju
+    //sa automaticky prekresli
 
     private val _constructorStandings = MutableStateFlow<List<Constructor>>(emptyList())
     val constructorStandings: StateFlow<List<Constructor>> = _constructorStandings
@@ -26,6 +33,7 @@ class F1ViewModel : ViewModel() {
     private val _raceResult = MutableStateFlow<List<RaceResult>>(emptyList())
     val raceResult: StateFlow<List<RaceResult>> = _raceResult
 
+    //init blok sa spusti hned pri vytvoreni viewModelu. ihned zacne stahovat data z api
     init {
         loadDriverStandings()
         loadConstructorStandings()
@@ -36,6 +44,8 @@ class F1ViewModel : ViewModel() {
 
 
     private fun loadDriverStandings() {
+        //viewmodelscope spusti korutinu naviazanu na zivotny cyklus viewmodelu
+        //ked viewModel zanikne korutina sa automaticky zrusi - ziadne memory leaks
         viewModelScope.launch {
             try {
                 val response = RetrofitInstance.api.getDriverStandings()
@@ -135,7 +145,7 @@ class F1ViewModel : ViewModel() {
                         circuitName = raceResult.circuit.circuitName,
                         country = raceResult.circuit.location.country,
                         date = raceResult.date,
-                        results = raceResult.results.map { result ->
+                        driverResults = raceResult.results.map { result ->
                             DriverResult (
                                 position = result.position.toInt(),
                                 driverCode = result.driver.code,

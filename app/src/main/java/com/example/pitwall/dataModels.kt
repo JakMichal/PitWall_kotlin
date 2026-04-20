@@ -31,6 +31,12 @@ data class Constructor(
     val isFavourite: Boolean = false
 )
 
+data class StandingItem(
+    val id: String,
+    val name: String,
+    val points: Int
+)
+
 data class Race(
     val round: Int,
     val raceName: String,
@@ -42,7 +48,7 @@ data class Race(
     val laps: Int = circuitLaps[circuitId] ?: 0,
     val length: Double = circuitLength[circuitId] ?: 0.0,
     val backgroundImage: Int = circuitBackgrounds[circuitId] ?: 0,
-    val circuitImage: Int = circuitTrackImages[circuitId] ?: 0,
+    val circuitImage: Int = circuitTrackImages[circuitId] ?: 0, //r.drawable je int
     val firstPractice: Pair<String, String>? = null,
     val secondPractice: Pair<String, String>? = null,
     val thirdPractice: Pair<String, String>? = null,
@@ -51,11 +57,11 @@ data class Race(
     val sprintQualifying: Pair<String, String>? = null,
 ) {
     fun getRaceDateTime() : LocalDateTime {
-        val dateTime = "${date}T${time}:00"
+        val dateTime = "${date}T${time}:00" //T - lebo je to len format ako standard pre ISO_LOCAL_DATE_TIME
         return LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            .atZone(ZoneOffset.UTC)
-            .withZoneSameInstant(ZoneId.systemDefault())
-            .toLocalDateTime()
+            .atZone(ZoneOffset.UTC) //14:00 UTC
+            .withZoneSameInstant(ZoneId.systemDefault()) //UTC so zariadenia 14:00 -> 16:00 UTC+2
+            .toLocalDateTime() // aby to vratile localDateTime a nie ZonedDateTime pre pracu s casom
     }
 
 }
@@ -76,7 +82,7 @@ data class RaceResult(
     val circuitName: String,
     val country: String,
     val date: String,
-    val results: List<DriverResult>
+    val driverResults: List<DriverResult>
 )
 
 // Statické dáta okruhov — počet kôl

@@ -52,16 +52,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallTheme
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -73,12 +75,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PitWallTheme {
-                val viewModel: F1ViewModel = viewModel()  // ← pridaj
-                var activeScreen by rememberSaveable { mutableStateOf("Stats") }
+                val viewModel: F1ViewModel = viewModel()
                 ChangeScreen(
-                    activeScreen = activeScreen,
-                    onScreenChange = { activeScreen = it },
-                    viewModel = viewModel  // ← pridaj
+                    viewModel = viewModel
                 )
             }
 
@@ -88,11 +87,11 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeScreen(
-    activeScreen: String,
     modifier: Modifier = Modifier,
-    onScreenChange: (String) -> Unit,
     viewModel: F1ViewModel
 ) {
+    val navController = rememberNavController()
+    val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     var showBottomSheet by remember { mutableStateOf(false)}
     var selectedRace by remember { mutableStateOf<Race?>(null)}
     val raceResult by viewModel.raceResult.collectAsState()
@@ -107,7 +106,7 @@ fun ChangeScreen(
             }
         }
     }
-
+    //material3 layout stara sa o spravne rozmiesntenie topBar BottomBar a content
     Scaffold(
         containerColor = PitWallBackground,
         bottomBar = {
@@ -122,8 +121,8 @@ fun ChangeScreen(
             ) {
                 NavigationBarItem(
                     modifier = Modifier.padding(top = 10.dp),
-                    selected = activeScreen == "Home",
-                    onClick = { onScreenChange("Home") },
+                    selected = currentDestination?.route == "Home",
+                    onClick = { navController.navigate("Home") },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home", modifier = Modifier.size(20.dp)) },
                     label = { Text("Home") },
                     colors = NavigationBarItemDefaults.colors (
@@ -132,8 +131,8 @@ fun ChangeScreen(
                 )
                 NavigationBarItem(
                     modifier = Modifier.padding(top = 10.dp),
-                    selected = activeScreen == "Schedule",
-                    onClick = { onScreenChange("Schedule") },
+                    selected = currentDestination?.route == "Schedule",
+                    onClick = { navController.navigate("Schedule") },
                     icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = "Schedule", modifier = Modifier.size(20.dp)) },
                     label = { Text("Schedule") },
                     colors = NavigationBarItemDefaults.colors (
@@ -142,8 +141,8 @@ fun ChangeScreen(
                 )
                 NavigationBarItem(
                     modifier = Modifier.padding(top = 10.dp),
-                    selected = activeScreen == "Stats",
-                    onClick = { onScreenChange("Stats") },
+                    selected = currentDestination?.route == "Stats",
+                    onClick = { navController.navigate("Stats") },
                     icon = { Icon(painter = painterResource(R.drawable.stats), contentDescription = "Stats", modifier = Modifier.size(20.dp)) },
                     label = { Text("Stats") },
                     colors = NavigationBarItemDefaults.colors (
@@ -152,8 +151,8 @@ fun ChangeScreen(
                 )
                 NavigationBarItem(
                     modifier = Modifier.padding(top = 10.dp),
-                    selected = activeScreen == "Favourite",
-                    onClick = { onScreenChange("Favourite") },
+                    selected = currentDestination?.route == "Favourite",
+                    onClick = { navController.navigate("Favourite") },
                     icon = { Icon(painter = painterResource(R.drawable.favorite), contentDescription = "Favourite", modifier = Modifier.size(20.dp)) },
                     label = { Text("Favourite") },
                     colors = NavigationBarItemDefaults.colors (
@@ -162,36 +161,62 @@ fun ChangeScreen(
                 )
             }
         }
-    ) { innerPadding ->
+    ) { innerPadding -> //
             Box(
                 modifier
                     .fillMaxSize()
                     .background(PitWallBackground)
                     .padding(top = innerPadding.calculateTopPadding()),
             ) {
-                when (activeScreen) {
-                    "Home" -> HomeScreen(
-                        onRaceClick = { race ->
-                            selectedRace = race
-                            showBottomSheet = true
-                        },
-                        modifier,
-                        onScreenChange = onScreenChange,
-                        viewModel = viewModel
-                    )
-                    "Stats" -> StatsScreen(
-                        viewModel = viewModel
-                    )
-                    "Schedule" -> ScheduleScreen(
-                        viewModel = viewModel,
-                        onRaceClick = { race ->
-                            selectedRace = race
-                            showBottomSheet = true
-                        }
+                NavHost(navController, startDestination = "Home")
+                {
+                    composable("Home") {
+                        HomeScreen(
+                            onRaceClick = { race ->
+                                selectedRace = race
+                                showBottomSheet = true
+                            },
+                            modifier,
+                            onNavigateToStats = { navController.navigate("Stats")},
+                            onNavigateToSchedule = { navController.navigate("Schedule")},
+                            viewModel = viewModel
                         )
-                    "Favourite" -> FavouriteScreen()
+                    }
+                    composable("Stats") {
+                        StatsScreen(
+                            viewModel = viewModel,
+                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId")},
+                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId")}
+                        )
+                    }
+
+                    composable("Schedule")
+                    {
+                        ScheduleScreen(
+                            viewModel = viewModel,
+                            onRaceClick = { race ->
+                                selectedRace = race
+                                showBottomSheet = true
+                            }
+                        )
+                    }
+                    composable("Favourite") {
+                        FavouriteScreen()
+                    }
+                    composable("driver_detail/{driverId}") { backStackEntry ->
+                        val driverId = backStackEntry.arguments?.getString("driverId")
+                        DriverDetailScreen(
+                            driverId = driverId ?: "",
+                            viewModel = viewModel,
+                            onBack = { navController.navigateUp()}
+                        )
+                    }
+                    composable("constructor_detail/{constructorId}") { backStackEntry ->
+                        val constructorId = backStackEntry.arguments?.getString("constructorId")
+                        Text(constructorId ?: "unknown")
+                    }
                 }
-                Box(
+                Box(//vizualny efekt pre spod baru aby content za navigation bar nebol tvrdo odrezany
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp)
@@ -214,7 +239,7 @@ fun RaceDetailSheet(
     raceResult: List<RaceResult>,
 ) {
     val results = raceResult.find { it.round == race.round }
-    val isFinished = results != null && results.results.isNotEmpty()
+    val isFinished = results != null && results.driverResults.isNotEmpty()
     var selectedTab by remember { mutableStateOf(0)}
     val tabs = if (isFinished) {
             listOf("Results", "Circuit", "Schedule")
@@ -248,9 +273,9 @@ fun RaceDetailSheet(
 
 @Composable
 fun ResultDetailSheet(result: RaceResult) {
-    val maxPoints = result.results.maxOfOrNull { it.points } ?: 0f
+    val maxPoints = result.driverResults.maxOfOrNull { it.points } ?: 0f
     LazyColumn {
-        itemsIndexed(result.results) { index, driverResult ->
+        itemsIndexed(result.driverResults) { index, driverResult ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -371,10 +396,7 @@ fun SessionRow(name: String, date: String, time: String) {
 fun HomeScreenPreview() {
     PitWallTheme {
         val viewModel: F1ViewModel = viewModel()
-        var activeScreen by remember { mutableStateOf("Home") }
         ChangeScreen(
-            activeScreen = activeScreen,
-            onScreenChange = { activeScreen = it },
             viewModel = viewModel
         )
     }

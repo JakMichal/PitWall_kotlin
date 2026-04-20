@@ -2,6 +2,9 @@ package com.example.pitwall
 
 import com.google.gson.annotations.SerializedName
 
+//serializedName je anotacie pre metadata pre gson a hovori ze
+// v JSON hladaj kluc givenName a uloz do vlastnosti firstName napr
+// bez toho by gson hladal kluc firtsName ktory v json neexistuje
 data class DriverResponse(
     @SerializedName("driverId") val driverId: String,
     @SerializedName("permanentNumber") val number: String,

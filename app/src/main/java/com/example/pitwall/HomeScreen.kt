@@ -53,10 +53,11 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onScreenChange: (String) -> Unit, viewModel: F1ViewModel) {
+fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onNavigateToStats: () -> Unit, onNavigateToSchedule: () -> Unit, viewModel: F1ViewModel) {
     val drivers by viewModel.driverStandings.collectAsState()
     val constructors by viewModel.constructorStandings.collectAsState()
-    val nextRace by viewModel.nextRace.collectAsState()
+    val nextRace by viewModel.nextRace.collectAsState() //collectAsState compose funkcia ktora sleduje stateflow a prekresli composeable
+    //zakazdym ked sa zmeni hodnota. By je kotlin delegat skratka pre .value
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -71,8 +72,8 @@ fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onScre
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ToScreenButton("Schedule", onScreenChange, R.drawable.calendar, modifier.weight(1f))
-                ToScreenButton("Stats", onScreenChange, R.drawable.result, modifier.weight(1f))
+                ToScreenButton("Schedule", onNavigateToSchedule, R.drawable.calendar, modifier.weight(1f))
+                ToScreenButton("Stats", onNavigateToStats, R.drawable.result, modifier.weight(1f))
             }
         }
         item { DriverChampionship(drivers = drivers.take(3)) }
@@ -188,6 +189,7 @@ fun NextRaceTimer(nextRace: Race) {
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
 
+    //korutina na zivotny cyklus composable unit ako kluc znamenza spusti sa raz apri prvom zobrazeni a bezi az composable zmizne z ui
     LaunchedEffect(Unit) {
         while (true) {
             totalSeconds = ChronoUnit.SECONDS.between(
@@ -292,9 +294,9 @@ fun NextRaceCircuit(nextRace: Race) {
 }
 
 @Composable
-fun ToScreenButton(change:String, onScreenChange: (String) -> Unit, drawable: Int,modifier: Modifier = Modifier) {
+fun ToScreenButton(change:String, onNavigateToScreen: () -> Unit, drawable: Int,modifier: Modifier = Modifier) {
     OutlinedButton(
-        onClick = { onScreenChange(change) },
+        onClick = { onNavigateToScreen() },
         modifier = modifier.height(70.dp),
         shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, Color.DarkGray),
@@ -431,10 +433,7 @@ fun ContructorChampionship(constructors: List<Constructor>) {
 fun HomeScreenPrevieww() {
     PitWallTheme {
         val viewModel: F1ViewModel = viewModel()
-        var activeScreen by remember { mutableStateOf("Home") }
         ChangeScreen(
-            activeScreen = activeScreen,
-            onScreenChange = { activeScreen = it },
             viewModel = viewModel
         )
     }

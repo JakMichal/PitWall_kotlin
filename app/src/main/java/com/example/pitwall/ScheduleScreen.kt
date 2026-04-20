@@ -157,10 +157,7 @@ fun CurrentRaceInfo(currentRace: Race, raceStatus: String) {
 fun SchedulePrevieww() {
     PitWallTheme {
         val viewModel: F1ViewModel = viewModel()
-        var activeScreen by remember { mutableStateOf("Schedule") }
         ChangeScreen(
-            activeScreen = activeScreen,
-            onScreenChange = { activeScreen = it },
             viewModel = viewModel
         )
     }

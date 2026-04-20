@@ -2,6 +2,7 @@ package com.example.pitwall
 
 import android.R.id.bold
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun StatsScreen(viewModel: F1ViewModel) {
+fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConstructorClick: (String) -> Unit) {
     var selectedTab by remember { mutableStateOf(0) }
     val driversStats by viewModel.driverStandings.collectAsState()
     val constructorsStats by viewModel.constructorStandings.collectAsState()
@@ -55,15 +56,21 @@ fun StatsScreen(viewModel: F1ViewModel) {
             )
         }
         when(selectedTab) {
-            0 -> StandingsList(driversStats.map { Pair(it.fullName, it.points)})
-            1 -> StandingsList(constructorsStats.map { Pair(it.name, it.points)})
+            0 -> StandingsList(
+                driversStats.map { StandingItem(it.driverId, it.fullName, it.points) },
+                    onItemClick = { driverId -> onDriverClick(driverId)}
+                )
+            1 -> StandingsList(
+                constructorsStats.map { StandingItem(it.constructorId, it.name, it.points)},
+                onItemClick = { constructorId -> onConstructorClick(constructorId)}
+            )
         }
     }
 }
 
 @Composable
-fun StandingsList(items: List<Pair<String, Int>>) {
-    val maxPoints =items.maxOfOrNull { it.second } ?: 0f
+fun StandingsList(items: List<StandingItem>, onItemClick: (String) -> Unit) {
+    val maxPoints =items.maxOfOrNull { it.points } ?: 0f
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -76,7 +83,8 @@ fun StandingsList(items: List<Pair<String, Int>>) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 16.dp)
+                    .clickable { onItemClick(item.id)},
                 border = BorderStroke(1.dp, color = Color.DarkGray)
             ) {
                 Row(
@@ -94,15 +102,15 @@ fun StandingsList(items: List<Pair<String, Int>>) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = item.first,
+                        text = item.name,
                         modifier = Modifier.weight(1f),
                         fontSize = 16.sp,
                         color = Color.White,
                         lineHeight = 10.sp)
-                    Text(text = "${item.second} pts", fontSize = 14.sp, color = Color.Gray)
+                    Text(text = "${item.points} pts", fontSize = 14.sp, color = Color.Gray)
                 }
                 LinearProgressIndicator(
-                    progress = {item.second.toFloat() / maxPoints.toFloat()},
+                    progress = {item.points.toFloat() / maxPoints.toFloat()},
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp, 0.dp, 12.dp, 8.dp),
