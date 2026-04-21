@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,6 +69,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.contracts.contract
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,8 +125,8 @@ fun ChangeScreen(
                     modifier = Modifier.padding(top = 10.dp),
                     selected = currentDestination?.route == "Home",
                     onClick = { navController.navigate("Home") },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home", modifier = Modifier.size(20.dp)) },
-                    label = { Text("Home") },
+                    icon = { Icon(Icons.Default.Home, contentDescription = stringResource(R.string.nav_home), modifier = Modifier.size(20.dp)) },
+                    label = { Text(stringResource(R.string.nav_home)) },
                     colors = NavigationBarItemDefaults.colors (
                         indicatorColor = Color.Red,
                     ),
@@ -133,8 +135,8 @@ fun ChangeScreen(
                     modifier = Modifier.padding(top = 10.dp),
                     selected = currentDestination?.route == "Schedule",
                     onClick = { navController.navigate("Schedule") },
-                    icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = "Schedule", modifier = Modifier.size(20.dp)) },
-                    label = { Text("Schedule") },
+                    icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = stringResource(R.string.nav_schedule), modifier = Modifier.size(20.dp)) },
+                    label = { Text(stringResource(R.string.nav_schedule)) },
                     colors = NavigationBarItemDefaults.colors (
                         indicatorColor = Color.Red
                     ),
@@ -143,8 +145,8 @@ fun ChangeScreen(
                     modifier = Modifier.padding(top = 10.dp),
                     selected = currentDestination?.route == "Stats",
                     onClick = { navController.navigate("Stats") },
-                    icon = { Icon(painter = painterResource(R.drawable.stats), contentDescription = "Stats", modifier = Modifier.size(20.dp)) },
-                    label = { Text("Stats") },
+                    icon = { Icon(painter = painterResource(R.drawable.stats), contentDescription = stringResource(R.string.nav_stats), modifier = Modifier.size(20.dp)) },
+                    label = { Text(stringResource(R.string.nav_stats)) },
                     colors = NavigationBarItemDefaults.colors (
                         indicatorColor = Color.Red
                     ),
@@ -153,8 +155,8 @@ fun ChangeScreen(
                     modifier = Modifier.padding(top = 10.dp),
                     selected = currentDestination?.route == "Favourite",
                     onClick = { navController.navigate("Favourite") },
-                    icon = { Icon(painter = painterResource(R.drawable.favorite), contentDescription = "Favourite", modifier = Modifier.size(20.dp)) },
-                    label = { Text("Favourite") },
+                    icon = { Icon(painter = painterResource(R.drawable.favorite), contentDescription = stringResource(R.string.nav_favourite), modifier = Modifier.size(20.dp)) },
+                    label = { Text(stringResource(R.string.nav_favourite)) },
                     colors = NavigationBarItemDefaults.colors (
                         indicatorColor = Color.Red
                     ),
@@ -213,7 +215,12 @@ fun ChangeScreen(
                     }
                     composable("constructor_detail/{constructorId}") { backStackEntry ->
                         val constructorId = backStackEntry.arguments?.getString("constructorId")
-                        Text(constructorId ?: "unknown")
+                        ConstructorDetailScreen(
+                            constructorId = constructorId ?: "",
+                            viewModel = viewModel,
+                            onBack = { navController.navigateUp()},
+                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") }
+                        )
                     }
                 }
                 Box(//vizualny efekt pre spod baru aby content za navigation bar nebol tvrdo odrezany
@@ -226,7 +233,7 @@ fun ChangeScreen(
                                 colors = listOf(Color.Transparent, PitWallBackground)
                             )
                         )
-                ) {}
+                )
             }
 
 
@@ -242,9 +249,14 @@ fun RaceDetailSheet(
     val isFinished = results != null && results.driverResults.isNotEmpty()
     var selectedTab by remember { mutableStateOf(0)}
     val tabs = if (isFinished) {
-            listOf("Results", "Circuit", "Schedule")
+            listOf(
+                stringResource(R.string.tab_results),
+                stringResource(R.string.tab_circuit),
+                stringResource(R.string.tab_schedule))
          } else {
-            listOf("Circuit", "Schedule")
+            listOf(
+                stringResource(R.string.tab_circuit),
+                stringResource(R.string.tab_schedule))
          }
 
     Column(
@@ -263,10 +275,10 @@ fun RaceDetailSheet(
                 )
             }
         }
-        when (tabs[selectedTab]) {
-            "Results" -> ResultDetailSheet(results!!)
-            "Circuit" -> CircuitDetailSheet(race)
-            "Schedule" -> ScheduleDetailSheet(race)
+        when (selectedTab) {
+            0 -> if (isFinished) ResultDetailSheet(results) else CircuitDetailSheet(race)
+            1 -> if (isFinished) CircuitDetailSheet(race) else ScheduleDetailSheet(race)
+            2 -> ScheduleDetailSheet(race)
         }
     }
 }
@@ -288,7 +300,7 @@ fun ResultDetailSheet(result: RaceResult) {
                     Text(driverResult.driverName, color = Color.White)
                     Text(driverResult.team, color = Color.Gray, fontSize = 12.sp)
                 }
-                Text("${driverResult.points} pts", color = Color.Gray)
+                Text(stringResource(R.string.points_format, driverResult.points), color = Color.Gray)
             }
             LinearProgressIndicator(
                 progress = { driverResult.points / maxPoints.toFloat() },
@@ -313,12 +325,17 @@ fun CircuitDetailSheet(race: Race) {
         Image(
             painter = painterResource(race.circuitImage),
             contentDescription = race.circuitName,
-            modifier = Modifier.fillMaxWidth().height(200.dp).padding(top = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(top = 16.dp),
             contentScale = ContentScale.Fit,
             colorFilter = ColorFilter.tint(Color.White),
         )
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Card(
@@ -327,11 +344,13 @@ fun CircuitDetailSheet(race: Race) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(race.laps.toString(), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text("Laps", color = Color.Gray, fontSize = 12.sp)
+                    Text(stringResource(R.string.laps), color = Color.Gray, fontSize = 12.sp)
                 }
             }
             Card(
@@ -340,11 +359,13 @@ fun CircuitDetailSheet(race: Race) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("${race.length} km", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text("Lap length", color = Color.Gray, fontSize = 12.sp)
+                    Text(stringResource(R.string.lap_length), color = Color.Gray, fontSize = 12.sp)
                 }
             }
         }
@@ -353,13 +374,13 @@ fun CircuitDetailSheet(race: Race) {
 @Composable
 fun ScheduleDetailSheet(race: Race) {
     Column(modifier = Modifier.padding(top = 8.dp)) {
-        race.firstPractice?.let { SessionRow("Practice 1", it.first, it.second) }
-        race.secondPractice?.let { SessionRow("Practice 2", it.first, it.second) }
-        race.thirdPractice?.let { SessionRow("Practice 3", it.first, it.second) }
-        race.sprintQualifying?.let { SessionRow("Sprint Qualifying", it.first, it.second) }
-        race.sprint?.let { SessionRow("Sprint", it.first, it.second) }
-        race.qualifying?.let { SessionRow("Qualifying", it.first, it.second) }
-        SessionRow("Race", race.date, race.time)
+        race.firstPractice?.let { SessionRow(stringResource(R.string.practice_1), it.first, it.second) }
+        race.secondPractice?.let { SessionRow(stringResource(R.string.practice_2), it.first, it.second) }
+        race.thirdPractice?.let { SessionRow(stringResource(R.string.practice_3), it.first, it.second) }
+        race.sprintQualifying?.let { SessionRow(stringResource(R.string.sprint_qualifying), it.first, it.second) }
+        race.sprint?.let { SessionRow(stringResource(R.string.sprint), it.first, it.second) }
+        race.qualifying?.let { SessionRow(stringResource(R.string.qualifying), it.first, it.second) }
+        SessionRow(stringResource(R.string.race), race.date, race.time)
     }
 }
 @Composable
@@ -379,13 +400,15 @@ fun SessionRow(name: String, date: String, time: String) {
         .format(DateTimeFormatter.ofPattern("HH:mm"))
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
         Text(name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
         Column(horizontalAlignment = Alignment.End) {
             Text(formattedDate, color = Color.White)
-            Text("$formattedTime local", color = Color.Gray, fontSize = 15.sp)
+            Text(stringResource(R.string.local_time, formattedTime), color = Color.Gray, fontSize = 15.sp)
         }
     }
     HorizontalDivider(color = Color.DarkGray)

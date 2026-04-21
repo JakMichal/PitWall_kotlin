@@ -62,7 +62,8 @@ class F1ViewModel : ViewModel() {
                         team = standing.constructors[0].name,
                         points = standing.points.toInt(),
                         wins = standing.wins.toInt(),
-                        position = standing.position.toInt()
+                        position = standing.position.toInt(),
+                        image = driversPictures[standing.driver.driverId] ?: 0
                     )
                 }
             } catch (e: Exception) {
@@ -85,7 +86,8 @@ class F1ViewModel : ViewModel() {
                         nationality = standing.constructor.nationality,
                         points = standing.points.toInt(),
                         wins = standing.wins.toInt(),
-                        position = standing.position.toInt()
+                        position = standing.position.toInt(),
+                        image = constructorsPictures[standing.constructor.constructorId] ?: 0
                     )
                 }
             } catch (e: Exception) {
@@ -109,6 +111,10 @@ class F1ViewModel : ViewModel() {
                         country = race.circuit.location.country,
                         date = race.date,
                         time = race.time.substring(0, 5),
+                        laps = circuitLaps[race.circuit.circuitId] ?: 0,
+                        length = circuitLength[race.circuit.circuitId] ?: 0.0,
+                        backgroundImage = circuitBackgrounds[race.circuit.circuitId] ?: 0,
+                        circuitImage = circuitTrackImages[race.circuit.circuitId] ?: 0,
                         firstPractice = race.firstPractice?.let { Pair(it.date, it.time) },
                         secondPractice = race.secondPractice?.let { Pair(it.date, it.time) },
                         thirdPractice = race.thirdPractice?.let { Pair(it.date, it.time) },

@@ -1,6 +1,5 @@
 package com.example.pitwall
 
-import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
@@ -66,7 +66,7 @@ fun ScheduleScreen(viewModel: F1ViewModel, onRaceClick: (Race) -> Unit) {
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         item { HeaderLogo()}
-        item { Text("SEASON ${LocalDate.now().year}", color = Color.Red, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 8.dp))}
+        item { Text(stringResource(R.string.season, LocalDate.now().year), color = Color.Red, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 8.dp))}
         items(races) { race -> RaceCard(race, nextRace, onRaceClick)}
     }
 }
@@ -78,15 +78,15 @@ fun RaceCard(currentRace: Race, nextRace : Race?, onRaceClick: (Race) -> Unit) {
         LocalDateTime.now(),
         currentRace.getRaceDateTime()
     )
-    val raceStatus = when {
-        status < 0 -> "Finished"
-        currentRace == nextRace -> "Next race"
-        else -> "Upcoming"
+    val raceStatus: RaceStatus = when {
+        status < 0 -> RaceStatus.FINISHED
+        currentRace == nextRace -> RaceStatus.NEXT
+        else -> RaceStatus.UPCOMING
     }
-    val borderColor = when {
-        status < 0 -> Color.DarkGray
-        currentRace == nextRace -> Color.Red
-        else -> Color.Gray
+    val borderColor = when(raceStatus) {
+        RaceStatus.FINISHED -> Color.DarkGray
+        RaceStatus.NEXT -> Color.Red
+        RaceStatus.UPCOMING -> Color.Gray
     }
     Box(
         modifier = Modifier
@@ -133,7 +133,7 @@ fun CurrentRaceBackground(currentRace: Race) {
 }
 
 @Composable
-fun CurrentRaceInfo(currentRace: Race, raceStatus: String) {
+fun CurrentRaceInfo(currentRace: Race, raceStatus: RaceStatus) {
     val formattedDate = LocalDate.parse(currentRace.date)
         .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
     Column(
@@ -145,9 +145,9 @@ fun CurrentRaceInfo(currentRace: Race, raceStatus: String) {
         Text(currentRace.circuitName, color = Color.Gray ,fontSize = 13.sp)
         Text(formattedDate)
         when(raceStatus) {
-            "Next race" -> Text(raceStatus, color = Color.Red, fontWeight = Bold)
-            "Upcoming" -> Text(raceStatus, color = Color.LightGray, fontStyle = FontStyle.Italic)
-            else -> Text(raceStatus, color = Color.Gray)
+            RaceStatus.NEXT -> Text(stringResource(R.string.next_race), color = Color.Red, fontWeight = Bold)
+            RaceStatus.UPCOMING -> Text(stringResource(R.string.upcoming), color = Color.LightGray, fontStyle = FontStyle.Italic)
+            RaceStatus.FINISHED -> Text(stringResource(R.string.finished), color = Color.Gray)
         }
     }
 }

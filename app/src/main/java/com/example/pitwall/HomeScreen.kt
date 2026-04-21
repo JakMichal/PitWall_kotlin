@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -72,12 +73,20 @@ fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onNavi
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ToScreenButton("Schedule", onNavigateToSchedule, R.drawable.calendar, modifier.weight(1f))
-                ToScreenButton("Stats", onNavigateToStats, R.drawable.result, modifier.weight(1f))
+                ToScreenButton(stringResource(R.string.nav_schedule), onNavigateToSchedule, R.drawable.calendar, modifier.weight(1f))
+                ToScreenButton(stringResource(R.string.nav_stats), onNavigateToStats, R.drawable.result, modifier.weight(1f))
             }
         }
-        item { DriverChampionship(drivers = drivers.take(3)) }
-        item { ContructorChampionship(constructors = constructors.take(3)) }
+        item { ChampionshipCard(
+            stringResource(R.string.driver_championship),
+            drivers.take(3).map { StandingItem(it.driverId, it.fullName, it.points, it.team)
+            })
+        }
+        item { ChampionshipCard(
+            stringResource(R.string.constructor_championship),
+            constructors.take(3).map { StandingItem(it.constructorId, it.name, it.points)
+            })
+        }
     }
 }
 @Composable
@@ -88,7 +97,7 @@ fun HeaderLogo() {
     ) {
         Image(
             painter = painterResource(R.drawable.pitwall_logo),
-            contentDescription = "Pitwall logo",
+            contentDescription = stringResource(R.string.pitwall_logo),
             modifier = Modifier
                 .height(28.dp)
                 .align(Alignment.CenterHorizontally)
@@ -103,7 +112,7 @@ fun NextRace(nextRace: Race, onRaceClick: (Race) -> Unit) {
             .fillMaxWidth()
             .padding(16.dp, 8.dp, 16.dp, 16.dp)
     ) {
-        Text(text = "NEXT RACE", fontSize = 13.sp, color = Color.Red)
+        Text(text = stringResource(R.string.next_race), fontSize = 13.sp, color = Color.Red)
         Box(
             modifier = Modifier
                 .clickable { onRaceClick(nextRace) }
@@ -176,7 +185,7 @@ fun NextRaceName(nextRace: Race) {
                 color = Color.LightGray
             )
             Text(text = " • ", fontSize = 15.sp, color = Color.LightGray)
-            Text(text = "Round ${nextRace.round}", fontSize = 15.sp, color = Color.LightGray)
+            Text(stringResource(R.string.round, nextRace.round), fontSize = 15.sp, color = Color.LightGray)
         }
     }
 }
@@ -212,7 +221,7 @@ fun NextRaceTimer(nextRace: Race) {
                 .padding(start = 16.dp),
         ) {
             Text(
-                text = "Remaining",
+                stringResource(R.string.remaining),
                 fontSize = 30.sp,
                 color = Color.Red,
                 fontWeight = FontWeight.Bold
@@ -231,7 +240,7 @@ fun NextRaceTimer(nextRace: Race) {
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
                     )
-                    Text(text = "days", fontSize = 15.sp, color = Color.LightGray)
+                    Text(stringResource(R.string.days), fontSize = 15.sp, color = Color.LightGray)
                 }
                 Text(" : ", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Red)
                 Column(
@@ -243,7 +252,7 @@ fun NextRaceTimer(nextRace: Race) {
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
                     )
-                    Text(text = "hours", fontSize = 15.sp, color = Color.LightGray)
+                    Text(stringResource(R.string.hours), fontSize = 15.sp, color = Color.LightGray)
                 }
                 Text(" : ", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Red)
                 Column(
@@ -255,7 +264,7 @@ fun NextRaceTimer(nextRace: Race) {
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
                     )
-                    Text(text = "min", fontSize = 15.sp, color = Color.LightGray)
+                    Text(stringResource(R.string.minutes), fontSize = 15.sp, color = Color.LightGray)
                 }
                 Text(
                     text = " : ",
@@ -272,7 +281,7 @@ fun NextRaceTimer(nextRace: Race) {
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
                     )
-                    Text(text = "sec", fontSize = 15.sp, color = Color.LightGray)
+                    Text(stringResource(R.string.seconds), fontSize = 15.sp, color = Color.LightGray)
                 }
 
             }
@@ -308,7 +317,7 @@ fun ToScreenButton(change:String, onNavigateToScreen: () -> Unit, drawable: Int,
     ) {
         Icon(
             painter = painterResource(drawable),
-            contentDescription = "red_calendar_icon",
+            contentDescription = stringResource(R.string.red_calendar_icon),
             tint = Color.Red,
             modifier = Modifier.size(50.dp).padding(end = 15.dp),
         )
@@ -318,13 +327,13 @@ fun ToScreenButton(change:String, onNavigateToScreen: () -> Unit, drawable: Int,
 }
 
 @Composable
-fun DriverChampionship(drivers: List<Driver>) {
+fun ChampionshipCard(title: String, items: List<StandingItem>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
     ) {
-        Text(text = "DRIVER CHAMPIONSHIP", fontSize = 13.sp, color = Color.Red)
+        Text(text = title, fontSize = 13.sp, color = Color.Red)
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
@@ -337,8 +346,8 @@ fun DriverChampionship(drivers: List<Driver>) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                val maxPoints = drivers.maxOfOrNull { it.points } ?: 0f
-                drivers.forEachIndexed { index, driver ->
+                val maxPoints = items.maxOfOrNull { it.points } ?: 0f
+                items.forEachIndexed { index, item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -353,13 +362,15 @@ fun DriverChampionship(drivers: List<Driver>) {
                             lineHeight = 10.sp
                         )
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = driver.fullName, fontSize = 14.sp, color = Color.White, lineHeight = 10.sp)
-                            Text(text = driver.team, fontSize = 12.sp, color = Color.Gray, lineHeight = 10.sp)
+                            Text(text = item.name, fontSize = 14.sp, color = Color.White, lineHeight = 10.sp)
+                            item.subTitle?.let {
+                                Text(text = it, fontSize = 12.sp, color = Color.Gray, lineHeight = 10.sp)
+                            }
                         }
-                        Text(text = "${driver.points} pts", fontSize = 14.sp, color = Color.Gray)
+                        Text(stringResource(R.string.points_format, item.points), fontSize = 14.sp, color = Color.Gray)
                     }
                     LinearProgressIndicator(
-                        progress = {driver.points.toFloat() / maxPoints.toFloat()},
+                        progress = {item.points.toFloat() / maxPoints.toFloat()},
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 3.dp, bottom = 2.dp),
@@ -370,71 +381,5 @@ fun DriverChampionship(drivers: List<Driver>) {
                 }
             }
         }
-    }
-}
-@Composable
-fun ContructorChampionship(constructors: List<Constructor>) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
-    ) {
-        Text(text = "CONSTRUCTOR CHAMPIONSHIP", fontSize = 13.sp, color = Color.Red)
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            border = BorderStroke(1.dp, color = Color.DarkGray)
-
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                val maxPoints = constructors.maxOfOrNull { it.points } ?: 0f
-                constructors.forEachIndexed { index, constructor ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Text(
-                            text = "${index + 1}.",
-                            fontSize = 16.sp,
-                            color = Color.Red,
-                            modifier = Modifier.width(24.dp)
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(text = constructor.name, fontSize = 14.sp, color = Color.White)
-                        }
-                        Text(text = "${constructor.points} pts", fontSize = 14.sp, color = Color.Gray)
-                    }
-                    LinearProgressIndicator(
-                        progress = {constructor.points.toFloat() / maxPoints.toFloat()},
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 2.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = Color.DarkGray,
-                        drawStopIndicator = {}
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun HomeScreenPrevieww() {
-    PitWallTheme {
-        val viewModel: F1ViewModel = viewModel()
-        ChangeScreen(
-            viewModel = viewModel
-        )
     }
 }

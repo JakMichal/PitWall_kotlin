@@ -4,6 +4,7 @@ import android.R.id.bold
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,12 +49,12 @@ fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConst
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0},
-                text = { Text("Drivers", color = Color.Red)}
+                text = { Text(stringResource(R.string.stats_drivers_tab), color = Color.Red)}
             )
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1},
-                text = { Text("Constructors", color = Color.Red)}
+                text = { Text(stringResource(R.string.stats_constructors_tab), color = Color.Red)}
             )
         }
         when(selectedTab) {
@@ -74,7 +76,8 @@ fun StandingsList(items: List<StandingItem>, onItemClick: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         itemsIndexed(items) { index, item ->
             Card(
@@ -107,7 +110,7 @@ fun StandingsList(items: List<StandingItem>, onItemClick: (String) -> Unit) {
                         fontSize = 16.sp,
                         color = Color.White,
                         lineHeight = 10.sp)
-                    Text(text = "${item.points} pts", fontSize = 14.sp, color = Color.Gray)
+                    Text(stringResource(R.string.points_format, item.points), fontSize = 14.sp, color = Color.Gray)
                 }
                 LinearProgressIndicator(
                     progress = {item.points.toFloat() / maxPoints.toFloat()},

@@ -16,7 +16,8 @@ data class Driver(
     val points: Int,
     val wins: Int,
     val position: Int,
-    val isFavourite: Boolean = false
+    val isFavourite: Boolean = false,
+    val image: Int
 ) {
     val fullName get() = "$firstName $lastName"
 }
@@ -28,13 +29,15 @@ data class Constructor(
     val points: Int,
     val wins: Int,
     val position: Int,
-    val isFavourite: Boolean = false
+    val isFavourite: Boolean = false,
+    val image: Int
 )
 
 data class StandingItem(
     val id: String,
     val name: String,
-    val points: Int
+    val points: Int,
+    val subTitle: String? = null
 )
 
 data class Race(
@@ -45,10 +48,10 @@ data class Race(
     val country: String,
     val date: String,
     val time: String,
-    val laps: Int = circuitLaps[circuitId] ?: 0,
-    val length: Double = circuitLength[circuitId] ?: 0.0,
-    val backgroundImage: Int = circuitBackgrounds[circuitId] ?: 0,
-    val circuitImage: Int = circuitTrackImages[circuitId] ?: 0, //r.drawable je int
+    val laps: Int,
+    val length: Double,
+    val backgroundImage: Int,
+    val circuitImage: Int,
     val firstPractice: Pair<String, String>? = null,
     val secondPractice: Pair<String, String>? = null,
     val thirdPractice: Pair<String, String>? = null,
@@ -194,3 +197,47 @@ val circuitTrackImages = mapOf(
     "losail"             to R.drawable.losailcircuit,
     "yas_marina"         to R.drawable.yasmarinacircuit
 )
+
+val driversPictures = mapOf(
+    "albon"             to R.drawable.albon,
+    "alonso"            to R.drawable.fernandoalonso,
+    "antonelli"         to R.drawable.kimiantonelli,
+    "bearman"           to R.drawable.oliverbearman,
+    "bortoleto"         to R.drawable.gabrielbortoleto,
+    "bottas"            to R.drawable.valteribottas,
+    "colapinto"         to R.drawable.francocollapinto,
+    "gasly"             to R.drawable.pierregasly,
+    "hadjar"            to R.drawable.isaachadjar,
+    "hamilton"          to R.drawable.lewishamilton,
+    "hulkenberg"        to R.drawable.nicohulkenberg,
+    "lawson"            to R.drawable.liamlawson,
+    "leclerc"           to R.drawable.charlesleclerc,
+    "arvid_lindblad"    to R.drawable.arvinlindblad,
+    "norris"            to R.drawable.landonorris,
+    "ocon"              to R.drawable.estebanocon,
+    "piastri"           to R.drawable.oscarpiastri,
+    "perez"             to R.drawable.sergioperez,
+    "sainz"             to R.drawable.carlossainz,
+    "stroll"            to R.drawable.lancestroll,
+    "max_verstappen"    to R.drawable.maxverstappen,
+    "russell"            to R.drawable.georgerussel,
+)
+
+val constructorsPictures = mapOf(
+    "mercedes"       to R.drawable.mercedes,
+    "ferrari"        to R.drawable.ferrari,
+    "mclaren"        to R.drawable.mclaren,
+    "red_bull"       to R.drawable.redbull,
+    "aston_martin"   to R.drawable.astonmartin,
+    "alpine"         to R.drawable.alpine,
+    "williams"       to R.drawable.williams,
+    "haas"           to R.drawable.haas,
+    "audi"           to R.drawable.audi,
+    "cadillac"       to R.drawable.cadillac,
+    "audi"           to R.drawable.audi,
+    "rb"             to R.drawable.racingbulls
+)
+
+enum class RaceStatus {
+    FINISHED, NEXT, UPCOMING
+}
