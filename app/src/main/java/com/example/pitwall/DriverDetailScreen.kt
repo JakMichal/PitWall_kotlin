@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -42,22 +45,41 @@ fun DriverDetailScreen(
 ) {
     val drivers by viewModel.driverStandings.collectAsState()
     val driver = drivers.find { it.driverId == driverId}
+    val favouriteDrivers by viewModel.favouriteDrivers.collectAsState()
+    val isFavourite = favouriteDrivers.any { it.driverId == driverId }
 
     if (driver == null) {
         Text(stringResource(R.string.driver_not_found))
         return
     }
 
-    Column {
-        DetailHeader(stringResource(R.string.driver_detail), onBack)
-        DriverDetailCard(driver)
-        DriverDetailGrid(driver)
+    LazyColumn {
+        item { DetailHeader(
+            headerText = stringResource(R.string.driver_detail),
+            onBack = onBack,
+            onFavouriteClick = {
+                if (isFavourite) viewModel.removeFavouriteDriver(driverId)
+                else viewModel.addFavouriteDriver(driverId)
+            },
+            isFavourite = isFavourite,
+
+        ) }
+        item { DriverDetailCard(driver) }
+        item { DriverDetailGrid(driver) }
     }
 }
 @Composable
-fun DetailHeader(headerText: String, onBack: () -> Unit) {
+fun DetailHeader(
+    headerText: String,
+    onBack: () -> Unit,
+    onFavouriteClick: () -> Unit,
+    isFavourite: Boolean = false
+) {
     Row (
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -69,6 +91,14 @@ fun DetailHeader(headerText: String, onBack: () -> Unit) {
 
             )
         Text(headerText, fontSize = 15.sp, color = Color.Red, modifier = Modifier.padding(start = 5.dp))
+
+        Icon(
+            imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+            contentDescription = "Add to favourites",
+            tint = Color.Red,
+            modifier = Modifier
+                .clickable { onFavouriteClick() },
+        )
     }
 }
 
@@ -123,14 +153,18 @@ fun DriverDetailCard(driver: Driver) {
 @Composable
 fun DriverDetailGrid(driver: Driver) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp, 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp, 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatCard(driver.points.toString(), stringResource(R.string.points), modifier = Modifier.weight(1f))
         StatCard(driver.wins.toString(), stringResource(R.string.wins), modifier = Modifier.weight(1f))
     }
     Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp, 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp, 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatCard(driver.position.toString(), stringResource(R.string.position), modifier = Modifier.weight(1f))
@@ -147,7 +181,9 @@ fun StatCard(value: String, label: String, modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(value, fontSize = 22.sp, fontWeight = FontWeight.Bold)

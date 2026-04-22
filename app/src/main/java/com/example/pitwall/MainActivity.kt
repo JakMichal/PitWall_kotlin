@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -77,7 +79,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PitWallTheme {
-                val viewModel: F1ViewModel = viewModel()
+                val viewModel: F1ViewModel by viewModels {
+                    ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+                }
                 ChangeScreen(
                     viewModel = viewModel
                 )
@@ -203,7 +207,11 @@ fun ChangeScreen(
                         )
                     }
                     composable("Favourite") {
-                        FavouriteScreen()
+                        FavouriteScreen(
+                            viewModel = viewModel,
+                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
+                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId")}
+                        )
                     }
                     composable("driver_detail/{driverId}") { backStackEntry ->
                         val driverId = backStackEntry.arguments?.getString("driverId")

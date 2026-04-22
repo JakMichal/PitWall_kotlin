@@ -1,5 +1,7 @@
 package com.example.pitwall
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +13,16 @@ import java.time.temporal.ChronoUnit
 //ViewModel je trieda, ktorá prežije rotáciu obrazovky.
 //keby data boli v composable pri otoceni mobilu by sa vsetko stratilo
 //viewmodel zije dlhsie ako UI
-class F1ViewModel : ViewModel() {
+class F1ViewModel(application: Application) : AndroidViewModel(application) {
+    private val db = PitWallDatabase.getDatabase(application)
+    private val driverDao = db.favouriteDriverDao()
+    private val constructorDao = db.favouriteConstructorDao()
+
+    private val _favouriteDrivers = MutableStateFlow<List<FavouriteDriver>>(emptyList())
+    val favouriteDrivers: StateFlow<List<FavouriteDriver>> = _favouriteDrivers
+
+    private val _favouriteConstructors = MutableStateFlow<List<FavouriteConstructor>>(emptyList())
+    val favouriteConstructors: StateFlow<List<FavouriteConstructor>> = _favouriteConstructors
 
     //_driverStandings - konvencia oznacenie aby sme vedeli ze je sukromna a iba viewModel
     //don moze zapisovat
@@ -39,6 +50,18 @@ class F1ViewModel : ViewModel() {
         loadConstructorStandings()
         loadRaces()
         loadRaceResults()
+
+        viewModelScope.launch {
+            driverDao.getAll().collect { list ->
+                _favouriteDrivers.value = list
+            }
+        }
+
+        viewModelScope.launch {
+            constructorDao.getAll().collect { list ->
+                _favouriteConstructors.value = list
+            }
+        }
     }
 
 
@@ -167,6 +190,32 @@ class F1ViewModel : ViewModel() {
                 // zatiaľ len vypíšeme chybu
                 e.printStackTrace()
             }
+        }
+    }
+
+    fun addFavouriteDriver(driverId: String) {
+        //spusti korutinu bez brzdenia UI
+        viewModelScope.launch {
+            driverDao.insert(FavouriteDriver(driverId = driverId))
+        }
+    }
+
+    fun removeFavouriteDriver(driverId: String) {
+        viewModelScope.launch {
+            driverDao.delete(FavouriteDriver(driverId = driverId))
+        }
+    }
+
+    fun addFavouriteConstructor(constructorId: String) {
+        //spusti korutinu bez brzdenia UI
+        viewModelScope.launch {
+            constructorDao.insert(FavouriteConstructor(constructorId = constructorId))
+        }
+    }
+
+    fun removeFavouriteConstructor(constructorId: String) {
+        viewModelScope.launch {
+            constructorDao.delete(FavouriteConstructor(constructorId = constructorId))
         }
     }
 }

@@ -45,6 +45,9 @@ fun ConstructorDetailScreen(
     val drivers by viewModel.driverStandings.collectAsState()
     val constructor = constructors.find { it.constructorId == constructorId}
     val teamDrivers = drivers.filter { it.team == constructor?.name }
+    val favouriteConstructors by viewModel.favouriteConstructors.collectAsState()
+    val isFavourite = favouriteConstructors.any { it.constructorId == constructorId }
+
 
     if (constructor == null) {
         Text(stringResource(R.string.constructor_not_found))
@@ -54,7 +57,16 @@ fun ConstructorDetailScreen(
     LazyColumn (
         modifier = Modifier.padding(bottom = 100.dp)
     ) {
-        item { DetailHeader(stringResource(R.string.constructor_detail), onBack) }
+        item { DetailHeader(
+            headerText = stringResource(R.string.constructor_detail),
+            onBack = onBack,
+            onFavouriteClick = {
+                if (isFavourite) viewModel.removeFavouriteConstructor(constructorId)
+                else viewModel.addFavouriteConstructor(constructorId)
+            },
+            isFavourite = isFavourite,
+            )
+        }
         item { ConstructorDetailCard(constructor) }
         item { ConstructorDetailGrid(constructor) }
         item { ConstructorDetailDrivers(teamDrivers, onDriverClick) }
