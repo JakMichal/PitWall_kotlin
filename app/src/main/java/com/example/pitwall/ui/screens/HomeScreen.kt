@@ -1,4 +1,4 @@
-package com.example.pitwall
+package com.example.pitwall.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -30,9 +30,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,17 +43,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pitwall.ui.theme.PitWallTheme
+import com.example.pitwall.R
+import com.example.pitwall.data.Race
+import com.example.pitwall.data.StandingItem
+import com.example.pitwall.viewmodel.F1ViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Composable
-fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onNavigateToStats: () -> Unit, onNavigateToSchedule: () -> Unit, viewModel: F1ViewModel) {
+fun HomeScreen(onRaceClick: (Race) -> Unit, modifier: Modifier = Modifier, onNavigateToStats: () -> Unit, onNavigateToSchedule: () -> Unit, viewModel: F1ViewModel) {
     val drivers by viewModel.driverStandings.collectAsState()
     val constructors by viewModel.constructorStandings.collectAsState()
     val nextRace by viewModel.nextRace.collectAsState() //collectAsState compose funkcia ktora sleduje stateflow a prekresli composeable
@@ -79,12 +79,14 @@ fun HomeScreen(onRaceClick: (Race) -> Unit,modifier: Modifier = Modifier, onNavi
         }
         item { ChampionshipCard(
             stringResource(R.string.driver_championship),
-            drivers.take(3).map { StandingItem(it.driverId, it.fullName, it.points, it.team)
+            drivers.take(3).map {
+                StandingItem(it.driverId, it.fullName, it.points, it.team)
             })
         }
         item { ChampionshipCard(
             stringResource(R.string.constructor_championship),
-            constructors.take(3).map { StandingItem(it.constructorId, it.name, it.points)
+            constructors.take(3).map {
+                StandingItem(it.constructorId, it.name, it.points)
             })
         }
     }
@@ -178,7 +180,7 @@ fun NextRaceName(nextRace: Race) {
             fontWeight = FontWeight.Bold,
             color = Color.White,
         )
-        Row() {
+        Row {
             Text(
                 text = nextRace.circuitName,
                 fontSize = 15.sp,
@@ -192,7 +194,8 @@ fun NextRaceName(nextRace: Race) {
 
 @Composable
 fun NextRaceTimer(nextRace: Race) {
-    var totalSeconds by remember { mutableStateOf(0L) }
+    val totalSecondsState = remember { mutableLongStateOf(0L) }
+    val totalSeconds = totalSecondsState.longValue
     val days = totalSeconds / 86400
     val hours = (totalSeconds % 86400) / 3600
     val minutes = (totalSeconds % 3600) / 60
@@ -201,7 +204,7 @@ fun NextRaceTimer(nextRace: Race) {
     //korutina na zivotny cyklus composable unit ako kluc znamenza spusti sa raz apri prvom zobrazeni a bezi az composable zmizne z ui
     LaunchedEffect(Unit) {
         while (true) {
-            totalSeconds = ChronoUnit.SECONDS.between(
+            totalSecondsState.longValue = ChronoUnit.SECONDS.between(
                 LocalDateTime.now(),
                 nextRace.getRaceDateTime()
             )
@@ -220,72 +223,35 @@ fun NextRaceTimer(nextRace: Race) {
                 .fillMaxWidth()
                 .padding(start = 16.dp),
         ) {
-            Text(
-                stringResource(R.string.remaining),
-                fontSize = 30.sp,
-                color = Color.Red,
-                fontWeight = FontWeight.Bold
-            )
+            Text(stringResource(R.string.remaining), fontSize = 30.sp, color = Color.Red, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 5.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = days.toString().padStart(2, '0'),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Red
-                    )
-                    Text(stringResource(R.string.days), fontSize = 15.sp, color = Color.LightGray)
-                }
+                TimeUnit(days, R.string.days)
                 Text(" : ", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Red)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = hours.toString().padStart(2, '0'),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Red
-                    )
-                    Text(stringResource(R.string.hours), fontSize = 15.sp, color = Color.LightGray)
-                }
+                TimeUnit(hours,   R.string.hours)
                 Text(" : ", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Red)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = minutes.toString().padStart(2, '0'),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Red
-                    )
-                    Text(stringResource(R.string.minutes), fontSize = 15.sp, color = Color.LightGray)
-                }
-                Text(
-                    text = " : ",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red
-                )
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = seconds.toString().padStart(2, '0'),
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Red
-                    )
-                    Text(stringResource(R.string.seconds), fontSize = 15.sp, color = Color.LightGray)
-                }
-
+                TimeUnit(minutes, R.string.minutes)
+                Text(text = " : ", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Red)
+                TimeUnit(seconds, R.string.seconds)
             }
         }
+    }
+}
+@Composable
+private fun TimeUnit(value: Long, labelRes: Int) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = value.toString().padStart(2, '0'),
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Red
+        )
+        Text(stringResource(labelRes), fontSize = 15.sp, color = Color.LightGray)
     }
 }
 
@@ -346,7 +312,7 @@ fun ChampionshipCard(title: String, items: List<StandingItem>) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                val maxPoints = items.maxOfOrNull { it.points } ?: 0f
+                val maxPoints = items.maxOfOrNull { it.points } ?: 0
                 items.forEachIndexed { index, item ->
                     Row(
                         modifier = Modifier

@@ -1,4 +1,4 @@
-package com.example.pitwall
+package com.example.pitwall.api
 
 import com.google.gson.annotations.SerializedName
 
@@ -84,7 +84,7 @@ data class LocationResponse(
     @SerializedName("country") val country: String,
 )
 
-data class dateTimeResponse(
+data class DateTimeResponse(
     @SerializedName("date") val date: String,
     @SerializedName("time") val time: String,
 )
@@ -96,17 +96,17 @@ data class RacesResponse(
     @SerializedName("date") val date: String,
     @SerializedName("time") val time: String,
     @SerializedName("Results") val results: List<RaceResultItemResponse> = emptyList(),
-    @SerializedName("FirstPractice") val firstPractice: dateTimeResponse? = null,
-    @SerializedName("SecondPractice") val secondPractice: dateTimeResponse? = null,
-    @SerializedName("ThirdPractice") val thirdPractice: dateTimeResponse? = null,
-    @SerializedName("Qualifying") val qualifying: dateTimeResponse? = null,
-    @SerializedName("Sprint") val sprint: dateTimeResponse? = null,
-    @SerializedName("SprintQualifying") val sprintQualifying: dateTimeResponse? = null,
+    @SerializedName("FirstPractice") val firstPractice: DateTimeResponse? = null,
+    @SerializedName("SecondPractice") val secondPractice: DateTimeResponse? = null,
+    @SerializedName("ThirdPractice") val thirdPractice: DateTimeResponse? = null,
+    @SerializedName("Qualifying") val qualifying: DateTimeResponse? = null,
+    @SerializedName("Sprint") val sprint: DateTimeResponse? = null,
+    @SerializedName("SprintQualifying") val sprintQualifying: DateTimeResponse? = null,
 )
 
 data class RaceTableResponse(
     @SerializedName("Races")
-    val Races: List<RacesResponse>
+    val races: List<RacesResponse>
 )
 
 data class RacesMRDataResponse(

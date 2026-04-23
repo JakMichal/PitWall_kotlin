@@ -1,4 +1,4 @@
-package com.example.pitwall
+package com.example.pitwall.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -36,6 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pitwall.viewmodel.F1ViewModel
+import com.example.pitwall.R
+import com.example.pitwall.data.Driver
 
 @Composable
 fun DriverDetailScreen(
@@ -94,16 +97,36 @@ fun DetailHeader(
 
         Icon(
             imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-            contentDescription = "Add to favourites",
+            contentDescription = stringResource(R.string.add_to_favourites),
             tint = Color.Red,
             modifier = Modifier
                 .clickable { onFavouriteClick() },
         )
     }
 }
-
 @Composable
 fun DriverDetailCard(driver: Driver) {
+    DetailEntityCard {
+        if (driver.image != 0) {
+            Image(
+                painter = painterResource(driver.image),
+                contentDescription = stringResource(R.string.driver_picture),
+                modifier = Modifier
+                    .size(120.dp)
+                    .background(MaterialTheme.colorScheme.background, CircleShape)
+                    .clip(CircleShape)
+                    .border(2.dp, Color.Red, CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        Text(driver.number, color = Color.Red, fontSize = 35.sp)
+        Text(driver.fullName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(driver.team, color = Color.Gray, fontSize = 13.sp)
+        NationalityBadge(driver.nationality)
+    }
+}
+@Composable
+fun DetailEntityCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,34 +143,19 @@ fun DriverDetailCard(driver: Driver) {
                 .padding(top = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (driver.image != 0) {
-                Image(
-                    painter = painterResource(driver.image),
-                    contentDescription = stringResource(R.string.driver_picture),
-                    modifier = Modifier
-                        .size(120.dp)
-                        .background(MaterialTheme.colorScheme.background, CircleShape)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Red, CircleShape),
-                    contentScale = ContentScale.Crop,
-                )
-            }
-            Text(driver.number, color = Color.Red, fontSize = 35.sp)
-            Text(driver.fullName,  fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Text(driver.team, color = Color.Gray, fontSize = 13.sp)
-            Text(
-                driver.nationality,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .background(
-                        color = Color.Red,
-                        shape = CircleShape
-                    )
-                    .padding(8.dp, 2.dp)
-            )
+            content()
         }
-
     }
+}
+@Composable
+fun NationalityBadge(nationality: String) {
+    Text(
+        text = nationality,
+        fontSize = 13.sp,
+        modifier = Modifier
+            .background(color = Color.Red, shape = CircleShape)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    )
 }
 
 @Composable

@@ -1,13 +1,11 @@
-package com.example.pitwall
+package com.example.pitwall.ui.screens
 
-import android.R.attr.onClick
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -27,7 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,6 +34,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pitwall.R
+import com.example.pitwall.viewmodel.F1ViewModel
 
 @Composable
 fun FavouriteScreen(
@@ -44,7 +43,7 @@ fun FavouriteScreen(
     onDriverClick: (String) -> Unit,
     onConstructorClick: (String) -> Unit,
 ) {
-    var selectedTab by rememberSaveable { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val favouriteDrivers by viewModel.favouriteDrivers.collectAsState()
     val allDrivers by viewModel.driverStandings.collectAsState()
     val favouriteConstructors by viewModel.favouriteConstructors.collectAsState()
@@ -68,7 +67,9 @@ fun FavouriteScreen(
             )
         }
         when(selectedTab) {
-            0 -> LazyColumn {
+            0 -> LazyColumn(
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
                 items(favouriteDrivers) { favDriver ->
                     val driver = allDrivers.find { it.driverId == favDriver.driverId }
                     if (driver != null) {
@@ -80,7 +81,9 @@ fun FavouriteScreen(
                     }
                 }
             }
-            1 -> LazyColumn {
+            1 -> LazyColumn (
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
                 items(favouriteConstructors) { favConstructor ->
                     val constructor =
                         allConstructors.find { it.constructorId == favConstructor.constructorId }
@@ -134,7 +137,7 @@ fun FavouriteItem(
             }
             Icon(
                 imageVector = Icons.Default.Favorite,
-                contentDescription = "Remove from Favourite",
+                contentDescription = stringResource(R.string.remove_from_favourites),
                 tint = Color.Red,
                 modifier = Modifier
                     .padding(end = 10.dp)

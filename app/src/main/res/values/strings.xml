@@ -47,5 +47,6 @@
     <string name="local_time">%s local</string>
     <string name="season">SEASON %d</string>
     <string name="points_format">%d pts</string>
-
+    <string name="add_to_favourites">Add to favourites</string>
+    <string name="remove_from_favourites">Remove from favourites</string>
 </resources>

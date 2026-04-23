@@ -1,4 +1,4 @@
-package com.example.pitwall
+package com.example.pitwall.data
 
 import android.content.Context
 import androidx.room.Dao

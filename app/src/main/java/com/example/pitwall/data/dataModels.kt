@@ -1,5 +1,6 @@
-package com.example.pitwall
+package com.example.pitwall.data
 
+import com.example.pitwall.R
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -29,7 +30,6 @@ data class Constructor(
     val points: Int,
     val wins: Int,
     val position: Int,
-    val isFavourite: Boolean = false,
     val image: Int
 )
 

@@ -1,9 +1,23 @@
-package com.example.pitwall
+package com.example.pitwall.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pitwall.api.RetrofitInstance
+import com.example.pitwall.data.Constructor
+import com.example.pitwall.data.Driver
+import com.example.pitwall.data.DriverResult
+import com.example.pitwall.data.FavouriteConstructor
+import com.example.pitwall.data.FavouriteDriver
+import com.example.pitwall.data.PitWallDatabase
+import com.example.pitwall.data.Race
+import com.example.pitwall.data.RaceResult
+import com.example.pitwall.data.circuitBackgrounds
+import com.example.pitwall.data.circuitLaps
+import com.example.pitwall.data.circuitLength
+import com.example.pitwall.data.circuitTrackImages
+import com.example.pitwall.data.constructorsPictures
+import com.example.pitwall.data.driversPictures
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -124,7 +138,7 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val response = RetrofitInstance.api.getRaceSchedule()
-                val races = response.mrData.raceTable.Races
+                val races = response.mrData.raceTable.races
                 _races.value = races.map { race ->
                     Race(
                         round = race.round.toInt(),
@@ -166,7 +180,7 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val response = RetrofitInstance.api.getRaceResults()
-                val races = response.mrData.raceTable.Races
+                val races = response.mrData.raceTable.races
                 _raceResult.value = races.map { raceResult ->
                     RaceResult(
                         round = raceResult.round.toInt(),
@@ -175,7 +189,7 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                         country = raceResult.circuit.location.country,
                         date = raceResult.date,
                         driverResults = raceResult.results.map { result ->
-                            DriverResult (
+                            DriverResult(
                                 position = result.position.toInt(),
                                 driverCode = result.driver.code,
                                 driverName = "${result.driver.firstName} ${result.driver.lastName}",

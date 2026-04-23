@@ -1,6 +1,5 @@
-package com.example.pitwall
+package com.example.pitwall.ui.screens
 
-import android.R.id.bold
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -22,8 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,10 +31,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.pitwall.R
+import com.example.pitwall.data.StandingItem
+import com.example.pitwall.viewmodel.F1ViewModel
 
 @Composable
 fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConstructorClick: (String) -> Unit) {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val driversStats by viewModel.driverStandings.collectAsState()
     val constructorsStats by viewModel.constructorStandings.collectAsState()
     Column(
@@ -63,7 +65,7 @@ fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConst
                     onItemClick = { driverId -> onDriverClick(driverId)}
                 )
             1 -> StandingsList(
-                constructorsStats.map { StandingItem(it.constructorId, it.name, it.points)},
+                constructorsStats.map { StandingItem(it.constructorId, it.name, it.points) },
                 onItemClick = { constructorId -> onConstructorClick(constructorId)}
             )
         }
@@ -72,7 +74,7 @@ fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConst
 
 @Composable
 fun StandingsList(items: List<StandingItem>, onItemClick: (String) -> Unit) {
-    val maxPoints =items.maxOfOrNull { it.points } ?: 0f
+    val maxPoints =items.maxOfOrNull { it.points } ?: 0
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()

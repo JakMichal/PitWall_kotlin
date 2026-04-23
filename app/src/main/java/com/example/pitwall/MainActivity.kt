@@ -5,73 +5,55 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.pitwall.data.Race
+import com.example.pitwall.ui.screens.ConstructorDetailScreen
+import com.example.pitwall.ui.screens.DriverDetailScreen
+import com.example.pitwall.ui.screens.FavouriteScreen
+import com.example.pitwall.ui.screens.HomeScreen
+import com.example.pitwall.ui.screens.RaceDetailSheet
+import com.example.pitwall.ui.screens.ScheduleScreen
+import com.example.pitwall.ui.screens.StatsScreen
 import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallTheme
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import kotlin.contracts.contract
+import com.example.pitwall.viewmodel.F1ViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,6 +72,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+private data class NavDestination (
+    val route: String,
+    val labelRes: Int,
+    val iconRes: Int
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeScreen(
@@ -98,14 +86,19 @@ fun ChangeScreen(
 ) {
     val navController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
-    var showBottomSheet by remember { mutableStateOf(false)}
-    var selectedRace by remember { mutableStateOf<Race?>(null)}
+
+    val showBottomSheetState = remember { mutableStateOf(false) }
+    val showBottomSheet = showBottomSheetState.value
+
+    val selectedRaceState = remember { mutableStateOf<Race?>(null) }
+    val selectedRace = selectedRaceState.value  //riesenie namiesto remember by pretoze ide hadzal error lebo nevedel to analyzovat
+
     val raceResult by viewModel.raceResult.collectAsState()
 
     if  (showBottomSheet) {
         selectedRace?.let { race ->
             ModalBottomSheet(
-                onDismissRequest = { showBottomSheet = false },
+                onDismissRequest = { showBottomSheetState.value = false },
                 containerColor = PitWallBackground
             ) {
                 RaceDetailSheet(race = race, raceResult = raceResult)
@@ -116,58 +109,12 @@ fun ChangeScreen(
     Scaffold(
         containerColor = PitWallBackground,
         bottomBar = {
-            NavigationBar(
-                modifier = Modifier
-                    .padding(start = 15.dp, top = 2.dp, end = 15.dp, bottom = 17.dp)
-                    .border(1.dp, Color.DarkGray, RoundedCornerShape(20.dp))
-                    .clip(RoundedCornerShape(20.dp))
-                    .height(70.dp),
-                containerColor = MaterialTheme.colorScheme.surface,
-
-            ) {
-                NavigationBarItem(
-                    modifier = Modifier.padding(top = 10.dp),
-                    selected = currentDestination?.route == "Home",
-                    onClick = { navController.navigate("Home") },
-                    icon = { Icon(Icons.Default.Home, contentDescription = stringResource(R.string.nav_home), modifier = Modifier.size(20.dp)) },
-                    label = { Text(stringResource(R.string.nav_home)) },
-                    colors = NavigationBarItemDefaults.colors (
-                        indicatorColor = Color.Red,
-                    ),
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(top = 10.dp),
-                    selected = currentDestination?.route == "Schedule",
-                    onClick = { navController.navigate("Schedule") },
-                    icon = { Icon(painter = painterResource(R.drawable.calendar), contentDescription = stringResource(R.string.nav_schedule), modifier = Modifier.size(20.dp)) },
-                    label = { Text(stringResource(R.string.nav_schedule)) },
-                    colors = NavigationBarItemDefaults.colors (
-                        indicatorColor = Color.Red
-                    ),
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(top = 10.dp),
-                    selected = currentDestination?.route == "Stats",
-                    onClick = { navController.navigate("Stats") },
-                    icon = { Icon(painter = painterResource(R.drawable.stats), contentDescription = stringResource(R.string.nav_stats), modifier = Modifier.size(20.dp)) },
-                    label = { Text(stringResource(R.string.nav_stats)) },
-                    colors = NavigationBarItemDefaults.colors (
-                        indicatorColor = Color.Red
-                    ),
-                )
-                NavigationBarItem(
-                    modifier = Modifier.padding(top = 10.dp),
-                    selected = currentDestination?.route == "Favourite",
-                    onClick = { navController.navigate("Favourite") },
-                    icon = { Icon(painter = painterResource(R.drawable.favorite), contentDescription = stringResource(R.string.nav_favourite), modifier = Modifier.size(20.dp)) },
-                    label = { Text(stringResource(R.string.nav_favourite)) },
-                    colors = NavigationBarItemDefaults.colors (
-                        indicatorColor = Color.Red
-                    ),
-                )
-            }
+            PitWallBottomBar(
+                currentRoute = currentDestination?.route,
+                onNavigate = { route -> navController.navigate(route)}
+            )
         }
-    ) { innerPadding -> //
+    ) { innerPadding ->
             Box(
                 modifier
                     .fillMaxSize()
@@ -179,20 +126,20 @@ fun ChangeScreen(
                     composable("Home") {
                         HomeScreen(
                             onRaceClick = { race ->
-                                selectedRace = race
-                                showBottomSheet = true
+                                selectedRaceState.value = race
+                                showBottomSheetState.value = true
                             },
                             modifier,
-                            onNavigateToStats = { navController.navigate("Stats")},
-                            onNavigateToSchedule = { navController.navigate("Schedule")},
+                            onNavigateToStats = { navController.navigate("Stats") },
+                            onNavigateToSchedule = { navController.navigate("Schedule") },
                             viewModel = viewModel
                         )
                     }
                     composable("Stats") {
                         StatsScreen(
                             viewModel = viewModel,
-                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId")},
-                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId")}
+                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
+                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId") }
                         )
                     }
 
@@ -201,8 +148,8 @@ fun ChangeScreen(
                         ScheduleScreen(
                             viewModel = viewModel,
                             onRaceClick = { race ->
-                                selectedRace = race
-                                showBottomSheet = true
+                                selectedRaceState.value = race
+                                showBottomSheetState.value = true
                             }
                         )
                     }
@@ -210,7 +157,7 @@ fun ChangeScreen(
                         FavouriteScreen(
                             viewModel = viewModel,
                             onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
-                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId")}
+                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId") }
                         )
                     }
                     composable("driver_detail/{driverId}") { backStackEntry ->
@@ -218,7 +165,7 @@ fun ChangeScreen(
                         DriverDetailScreen(
                             driverId = driverId ?: "",
                             viewModel = viewModel,
-                            onBack = { navController.navigateUp()}
+                            onBack = { navController.navigateUp() }
                         )
                     }
                     composable("constructor_detail/{constructorId}") { backStackEntry ->
@@ -226,7 +173,7 @@ fun ChangeScreen(
                         ConstructorDetailScreen(
                             constructorId = constructorId ?: "",
                             viewModel = viewModel,
-                            onBack = { navController.navigateUp()},
+                            onBack = { navController.navigateUp() },
                             onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") }
                         )
                     }
@@ -249,178 +196,41 @@ fun ChangeScreen(
 }
 
 @Composable
-fun RaceDetailSheet(
-    race: Race,
-    raceResult: List<RaceResult>,
+private fun PitWallBottomBar(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit
 ) {
-    val results = raceResult.find { it.round == race.round }
-    val isFinished = results != null && results.driverResults.isNotEmpty()
-    var selectedTab by remember { mutableStateOf(0)}
-    val tabs = if (isFinished) {
-            listOf(
-                stringResource(R.string.tab_results),
-                stringResource(R.string.tab_circuit),
-                stringResource(R.string.tab_schedule))
-         } else {
-            listOf(
-                stringResource(R.string.tab_circuit),
-                stringResource(R.string.tab_schedule))
-         }
-
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Text(race.raceName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        TabRow(
-            selectedTab,
-            containerColor = MaterialTheme.colorScheme.background
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = {selectedTab = index},
-                    text = { Text(title)}
-                )
-            }
-        }
-        when (selectedTab) {
-            0 -> if (isFinished) ResultDetailSheet(results) else CircuitDetailSheet(race)
-            1 -> if (isFinished) CircuitDetailSheet(race) else ScheduleDetailSheet(race)
-            2 -> ScheduleDetailSheet(race)
-        }
-    }
-}
-
-@Composable
-fun ResultDetailSheet(result: RaceResult) {
-    val maxPoints = result.driverResults.maxOfOrNull { it.points } ?: 0f
-    LazyColumn {
-        itemsIndexed(result.driverResults) { index, driverResult ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp, 12.dp, 12.dp, 4.dp),
-                verticalAlignment = Alignment.Top,
-
-            ) {
-                Text("${index + 1}.", fontWeight = FontWeight.Bold, color = Color.Red, modifier = Modifier.width(24.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(driverResult.driverName, color = Color.White)
-                    Text(driverResult.team, color = Color.Gray, fontSize = 12.sp)
-                }
-                Text(stringResource(R.string.points_format, driverResult.points), color = Color.Gray)
-            }
-            LinearProgressIndicator(
-                progress = { driverResult.points / maxPoints.toFloat() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp, 0.dp, 12.dp, 6.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.DarkGray,
-                drawStopIndicator = {}
-            )
-            HorizontalDivider(color = Color.DarkGray, thickness = 1.dp)
-        }
-    }
-}
-@Composable
-fun CircuitDetailSheet(race: Race) {
-    Column(
-        modifier = Modifier.padding(top = 8.dp)
-    ) {
-        Text(race.country, fontSize = 20.sp, )
-        Text(race.circuitName, fontSize = 18.sp, color = Color.LightGray)
-        Image(
-            painter = painterResource(race.circuitImage),
-            contentDescription = race.circuitName,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .padding(top = 16.dp),
-            contentScale = ContentScale.Fit,
-            colorFilter = ColorFilter.tint(Color.White),
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Card(
-                modifier = Modifier.weight(1f),
-                border = BorderStroke(1.dp, Color.DarkGray),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(race.laps.toString(), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.laps), color = Color.Gray, fontSize = 12.sp)
-                }
-            }
-            Card(
-                modifier = Modifier.weight(1f),
-                border = BorderStroke(1.dp, Color.DarkGray),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("${race.length} km", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.lap_length), color = Color.Gray, fontSize = 12.sp)
-                }
-            }
-        }
-    }
-}
-@Composable
-fun ScheduleDetailSheet(race: Race) {
-    Column(modifier = Modifier.padding(top = 8.dp)) {
-        race.firstPractice?.let { SessionRow(stringResource(R.string.practice_1), it.first, it.second) }
-        race.secondPractice?.let { SessionRow(stringResource(R.string.practice_2), it.first, it.second) }
-        race.thirdPractice?.let { SessionRow(stringResource(R.string.practice_3), it.first, it.second) }
-        race.sprintQualifying?.let { SessionRow(stringResource(R.string.sprint_qualifying), it.first, it.second) }
-        race.sprint?.let { SessionRow(stringResource(R.string.sprint), it.first, it.second) }
-        race.qualifying?.let { SessionRow(stringResource(R.string.qualifying), it.first, it.second) }
-        SessionRow(stringResource(R.string.race), race.date, race.time)
-    }
-}
-@Composable
-fun SessionRow(name: String, date: String, time: String) {
-    val fullTime = if (time.length < 8) "$time:00" else time
-    val local = LocalDateTime.parse(
-        "${date}T${fullTime.substring(0, 8)}",
-        DateTimeFormatter.ISO_LOCAL_DATE_TIME
+    val items = listOf(
+        NavDestination("Home", R.string.nav_home, iconRes = R.drawable.home),
+        NavDestination("Schedule", R.string.nav_schedule, iconRes = R.drawable.calendar),
+        NavDestination("Stats", R.string.nav_stats, iconRes = R.drawable.stats),
+        NavDestination("Favourite", R.string.nav_favourite, iconRes = R.drawable.favorite),
     )
-        .atZone(ZoneOffset.UTC)
-        .withZoneSameInstant(ZoneId.systemDefault())
-        .toLocalDateTime()
 
-    val formattedDate = local.toLocalDate()
-        .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-    val formattedTime = local.toLocalTime()
-        .format(DateTimeFormatter.ofPattern("HH:mm"))
-
-    Row(
+    NavigationBar(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.Top
+            .padding(start = 15.dp, top = 2.dp, end = 15.dp, bottom = 17.dp)
+            .border(1.dp, Color.DarkGray, RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .height(70.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
-        Text(name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-        Column(horizontalAlignment = Alignment.End) {
-            Text(formattedDate, color = Color.White)
-            Text(stringResource(R.string.local_time, formattedTime), color = Color.Gray, fontSize = 15.sp)
+        items.forEach { dest ->
+            NavigationBarItem(
+                modifier = Modifier.padding(top = 10.dp),
+                selected = currentRoute == dest.route,
+                onClick = { onNavigate(dest.route) },
+                icon = {
+                    val iconModifier = Modifier.size(20.dp)
+                    Icon(painterResource(dest.iconRes), contentDescription = stringResource(dest.labelRes), modifier = iconModifier)
+                },
+                label = { Text(stringResource(dest.labelRes))},
+                colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Red)
+            )
         }
     }
-    HorizontalDivider(color = Color.DarkGray)
 }
+
 
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable

@@ -1,4 +1,4 @@
-package com.example.pitwall
+package com.example.pitwall.api
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
