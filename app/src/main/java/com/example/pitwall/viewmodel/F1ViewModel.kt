@@ -1,7 +1,13 @@
 package com.example.pitwall.viewmodel
 
+import android.app.AlarmManager
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.example.pitwall.api.RetrofitInstance
 import com.example.pitwall.data.Constructor
@@ -23,6 +29,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import androidx.core.content.edit
+import com.example.pitwall.notification.RaceAlarmReceiver
+import com.example.pitwall.widget.WidgetConstants
+import kotlin.jvm.java
 
 //ViewModel je trieda, ktorá prežije rotáciu obrazovky.
 //keby data boli v composable pri otoceni mobilu by sa vsetko stratilo
@@ -103,6 +113,18 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                         image = driversPictures[standing.driver.driverId] ?: 0
                     )
                 }
+
+                val prefs = application.getSharedPreferences(WidgetConstants.PREFS_NAME, Context.MODE_PRIVATE)
+                val top3 = _driverStandings.value.take(3)
+
+                prefs.edit {
+                    putString(WidgetConstants.KEY_DRIVER1_NAME, top3[0].fullName)
+                        .putInt(WidgetConstants.KEY_DRIVER1_POINTS, top3[0].points)
+                        .putString(WidgetConstants.KEY_DRIVER2_NAME, top3[1].fullName)
+                        .putInt(WidgetConstants.KEY_DRIVER2_POINTS, top3[1].points)
+                        .putString(WidgetConstants.KEY_DRIVER3_NAME, top3[2].fullName)
+                        .putInt(WidgetConstants.KEY_DRIVER3_POINTS, top3[2].points)
+                }
             } catch (e: Exception) {
                 // zatiaľ len vypíšeme chybu
                 e.printStackTrace()
@@ -126,6 +148,17 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                         position = standing.position.toInt(),
                         image = constructorsPictures[standing.constructor.constructorId] ?: 0
                     )
+                }
+                val prefs = application.getSharedPreferences(WidgetConstants.PREFS_NAME, Context.MODE_PRIVATE)
+                val top3 = _constructorStandings.value.take(3)
+
+                prefs.edit {
+                    putString(WidgetConstants.KEY_CONSTRUCTOR1_NAME, top3[0].name)
+                        .putInt(WidgetConstants.KEY_CONSTRUCTOR1_POINTS, top3[0].points)
+                        .putString(WidgetConstants.KEY_CONSTRUCTOR2_NAME, top3[1].name)
+                        .putInt(WidgetConstants.KEY_CONSTRUCTOR2_POINTS, top3[1].points)
+                        .putString(WidgetConstants.KEY_CONSTRUCTOR3_NAME, top3[2].name)
+                        .putInt(WidgetConstants.KEY_CONSTRUCTOR3_POINTS, top3[2].points)
                 }
             } catch (e: Exception) {
                 // zatiaľ len vypíšeme chybu
@@ -174,6 +207,8 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
             .minByOrNull { race -> ChronoUnit.SECONDS.between(
                 LocalDateTime.now(),
                 race.getRaceDateTime()) }
+
+        _nextRace.value?.let { scheduleRaceReminder(it) }
     }
 
     private fun loadRaceResults() {
@@ -231,5 +266,36 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             constructorDao.delete(FavouriteConstructor(constructorId = constructorId))
         }
+    }
+
+    private fun scheduleRaceReminder(race: Race) {
+        val alarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) return
+        }
+
+        val intent = Intent(application, RaceAlarmReceiver::class.java).apply {
+            putExtra(RaceAlarmReceiver.EXTRA_RACE_NAME, race.raceName)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            application,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val raceTime = race.getRaceDateTime()
+            .minusHours(1)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            raceTime,
+            pendingIntent
+        )
     }
 }

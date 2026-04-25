@@ -25,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,9 +50,10 @@ fun FavouriteScreen(
     val allDrivers by viewModel.driverStandings.collectAsState()
     val favouriteConstructors by viewModel.favouriteConstructors.collectAsState()
     val allConstructors by viewModel.constructorStandings.collectAsState()
+    val showLanguageMenu = remember { mutableStateOf(false) }
 
     Column {
-        HeaderLogo()
+        HeaderLogo(onLanguageClick = { showLanguageMenu.value = true }, showLanguageMenu)
         TabRow(
             selectedTab,
                 containerColor = MaterialTheme.colorScheme.background

@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,12 +58,13 @@ fun ScheduleScreen(viewModel: F1ViewModel, onRaceClick: (Race) -> Unit) {
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = if (nextRaceIndex > 0) nextRaceIndex + 1 else 0
     )
+    val showLanguageMenu = remember { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
-        item { HeaderLogo() }
+        item { HeaderLogo(onLanguageClick = { showLanguageMenu.value = true }, showLanguageMenu) }
         item { Text(stringResource(R.string.season, LocalDate.now().year), color = Color.Red, fontSize = 13.sp, modifier = Modifier.padding(start = 16.dp, top = 8.dp))}
         items(races) { race -> RaceCard(race, nextRace, onRaceClick)}
     }

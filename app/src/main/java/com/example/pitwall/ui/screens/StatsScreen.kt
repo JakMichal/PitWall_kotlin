@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,10 +42,11 @@ fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConst
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val driversStats by viewModel.driverStandings.collectAsState()
     val constructorsStats by viewModel.constructorStandings.collectAsState()
+    val showLanguageMenu = remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        HeaderLogo()
+        HeaderLogo(onLanguageClick = { showLanguageMenu.value = true }, showLanguageMenu)
         TabRow(
             selectedTab,
             containerColor = MaterialTheme.colorScheme.background

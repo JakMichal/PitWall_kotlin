@@ -1,5 +1,6 @@
 package com.example.pitwall.ui.screens
 
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -28,9 +31,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.LocaleListCompat
 import com.example.pitwall.R
 import com.example.pitwall.data.Race
 import com.example.pitwall.data.StandingItem
@@ -59,12 +65,13 @@ fun HomeScreen(onRaceClick: (Race) -> Unit, modifier: Modifier = Modifier, onNav
     val constructors by viewModel.constructorStandings.collectAsState()
     val nextRace by viewModel.nextRace.collectAsState() //collectAsState compose funkcia ktora sleduje stateflow a prekresli composeable
     //zakazdym ked sa zmeni hodnota. By je kotlin delegat skratka pre .value
+    val showLanguageMenu = remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
-        item { HeaderLogo()}
+        item { HeaderLogo(onLanguageClick = { showLanguageMenu.value = true }, showLanguageMenu)}
         item { nextRace?.let { race -> NextRace(race, onRaceClick) } }
         item {
             Row(
@@ -90,20 +97,56 @@ fun HomeScreen(onRaceClick: (Race) -> Unit, modifier: Modifier = Modifier, onNav
             })
         }
     }
+
+
 }
 @Composable
-fun HeaderLogo() {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(top = 16.dp)
+fun HeaderLogo(onLanguageClick: () -> Unit, showLanguageMenu: MutableState<Boolean>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(modifier = Modifier.weight(1f))
         Image(
             painter = painterResource(R.drawable.pitwall_logo),
             contentDescription = stringResource(R.string.pitwall_logo),
-            modifier = Modifier
-                .height(28.dp)
-                .align(Alignment.CenterHorizontally)
+            modifier = Modifier.height(28.dp)
         )
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+            Icon(
+                painter = painterResource(R.drawable.language),
+                contentDescription = "Language",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onLanguageClick() }
+            )
+            DropdownMenu(
+                expanded = showLanguageMenu.value,
+                onDismissRequest = { showLanguageMenu.value = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("🇬🇧 English") },
+                    onClick = {
+                        showLanguageMenu.value = false
+                        AppCompatDelegate.setApplicationLocales(
+                            LocaleListCompat.forLanguageTags("en")
+                        )
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("🇸🇰 Slovenčina") },
+                    onClick = {
+                        showLanguageMenu.value = false
+                        AppCompatDelegate.setApplicationLocales(
+                            LocaleListCompat.forLanguageTags("sk")
+                        )
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -287,7 +330,7 @@ fun ToScreenButton(change:String, onNavigateToScreen: () -> Unit, drawable: Int,
             tint = Color.Red,
             modifier = Modifier.size(50.dp).padding(end = 15.dp),
         )
-        Text(change, fontSize =  17.5.sp)
+        Text(change, fontSize = 16.sp)
         Text(">", fontSize =  15.sp, color = Color.Gray, modifier = Modifier.padding(start = 10.dp))
     }
 }

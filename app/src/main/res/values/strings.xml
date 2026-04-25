@@ -49,4 +49,9 @@
     <string name="points_format">%d pts</string>
     <string name="add_to_favourites">Add to favourites</string>
     <string name="remove_from_favourites">Remove from favourites</string>
+    <string name="widget_drivers_description">PitWall F1 Drivers Widget</string>
+    <string name="widget_constructors_description">PitWall F1 Constructors Widget</string>
+    <string name="notification_title">Race in one hour!</string>
+    <string name="notification_text">%s starts in one hour!</string>
+    <string name="notification_channel_name">Race Reminder</string>
 </resources>
