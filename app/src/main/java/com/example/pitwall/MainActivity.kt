@@ -44,8 +44,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pitwall.data.Race
+import com.example.pitwall.data.UiState
 import com.example.pitwall.ui.screens.ConstructorDetailScreen
 import com.example.pitwall.ui.screens.DriverDetailScreen
+import com.example.pitwall.ui.screens.ErrorScreen
 import com.example.pitwall.ui.screens.FavouriteScreen
 import com.example.pitwall.ui.screens.HomeScreen
 import com.example.pitwall.ui.screens.RaceDetailSheet
@@ -94,6 +96,7 @@ fun ChangeScreen(
     val selectedRace = selectedRaceState.value  //riesenie namiesto remember by pretoze ide hadzal error lebo nevedel to analyzovat
 
     val raceResult by viewModel.raceResult.collectAsState()
+    val uiState by viewModel.currentScreen.collectAsState()
 
     if  (showBottomSheet) {
         selectedRace?.let { race ->
@@ -109,10 +112,12 @@ fun ChangeScreen(
     Scaffold(
         containerColor = PitWallBackground,
         bottomBar = {
-            PitWallBottomBar(
-                currentRoute = currentDestination?.route,
-                onNavigate = { route -> navController.navigate(route)}
-            )
+            if (uiState == UiState.Success) {
+                PitWallBottomBar(
+                    currentRoute = currentDestination?.route,
+                    onNavigate = { route -> navController.navigate(route) }
+                )
+            }
         }
     ) { innerPadding ->
             Box(
@@ -121,62 +126,71 @@ fun ChangeScreen(
                     .background(PitWallBackground)
                     .padding(top = innerPadding.calculateTopPadding()),
             ) {
-                NavHost(navController, startDestination = "Home")
-                {
-                    composable("Home") {
-                        HomeScreen(
-                            onRaceClick = { race ->
-                                selectedRaceState.value = race
-                                showBottomSheetState.value = true
-                            },
-                            modifier,
-                            onNavigateToStats = { navController.navigate("Stats") },
-                            onNavigateToSchedule = { navController.navigate("Schedule") },
-                            viewModel = viewModel
-                        )
-                    }
-                    composable("Stats") {
-                        StatsScreen(
-                            viewModel = viewModel,
-                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
-                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId") }
-                        )
-                    }
 
-                    composable("Schedule")
-                    {
-                        ScheduleScreen(
-                            viewModel = viewModel,
-                            onRaceClick = { race ->
-                                selectedRaceState.value = race
-                                showBottomSheetState.value = true
+                when (uiState) {
+                    is UiState.Error -> ErrorScreen(
+                        message = (uiState as UiState.Error).messageRes,
+                        onRetry = { viewModel.refresh() }
+                    )
+                    UiState.Success ->
+                        NavHost(navController, startDestination = "Home")
+                        {
+                            composable("Home") {
+                                HomeScreen(
+                                    onRaceClick = { race ->
+                                        selectedRaceState.value = race
+                                        showBottomSheetState.value = true
+                                    },
+                                    modifier,
+                                    onNavigateToStats = { navController.navigate("Stats") },
+                                    onNavigateToSchedule = { navController.navigate("Schedule") },
+                                    viewModel = viewModel
+                                )
                             }
-                        )
-                    }
-                    composable("Favourite") {
-                        FavouriteScreen(
-                            viewModel = viewModel,
-                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
-                            onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId") }
-                        )
-                    }
-                    composable("driver_detail/{driverId}") { backStackEntry ->
-                        val driverId = backStackEntry.arguments?.getString("driverId")
-                        DriverDetailScreen(
-                            driverId = driverId ?: "",
-                            viewModel = viewModel,
-                            onBack = { navController.navigateUp() }
-                        )
-                    }
-                    composable("constructor_detail/{constructorId}") { backStackEntry ->
-                        val constructorId = backStackEntry.arguments?.getString("constructorId")
-                        ConstructorDetailScreen(
-                            constructorId = constructorId ?: "",
-                            viewModel = viewModel,
-                            onBack = { navController.navigateUp() },
-                            onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") }
-                        )
-                    }
+                            composable("Stats") {
+                                StatsScreen(
+                                    viewModel = viewModel,
+                                    onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
+                                    onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId") }
+                                )
+                            }
+
+                            composable("Schedule")
+                            {
+                                ScheduleScreen(
+                                    viewModel = viewModel,
+                                    onRaceClick = { race ->
+                                        selectedRaceState.value = race
+                                        showBottomSheetState.value = true
+                                    }
+                                )
+                            }
+                            composable("Favourite") {
+                                FavouriteScreen(
+                                    viewModel = viewModel,
+                                    onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") },
+                                    onConstructorClick = { constructorId -> navController.navigate("constructor_detail/$constructorId") }
+                                )
+                            }
+                            composable("driver_detail/{driverId}") { backStackEntry ->
+                                val driverId = backStackEntry.arguments?.getString("driverId")
+                                DriverDetailScreen(
+                                    driverId = driverId ?: "",
+                                    viewModel = viewModel,
+                                    onBack = { navController.navigateUp() }
+                                )
+                            }
+                            composable("constructor_detail/{constructorId}") { backStackEntry ->
+                                val constructorId = backStackEntry.arguments?.getString("constructorId")
+                                ConstructorDetailScreen(
+                                    constructorId = constructorId ?: "",
+                                    viewModel = viewModel,
+                                    onBack = { navController.navigateUp() },
+                                    onDriverClick = { driverId -> navController.navigate("driver_detail/$driverId") }
+                                )
+                            }
+                        }
+
                 }
                 Box(//vizualny efekt pre spod baru aby content za navigation bar nebol tvrdo odrezany
                     modifier = Modifier
@@ -194,6 +208,8 @@ fun ChangeScreen(
 
     }
 }
+
+
 
 @Composable
 private fun PitWallBottomBar(

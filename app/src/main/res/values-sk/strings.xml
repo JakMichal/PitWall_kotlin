@@ -55,4 +55,7 @@
     <string name="notification_title">Pretek o hodinu!</string>
     <string name="notification_text">%s začína o hodinu!</string>
     <string name="notification_channel_name">Pripomienka preteku</string>
+    <string name="no_internet">Žiadne internetové pripojenie</string>
+    <string name="server_error">Chyba servera, skúste neskôr</string>
+    <string name="retry">Skúsiť znovu</string>
 </resources>

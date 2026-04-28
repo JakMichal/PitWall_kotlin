@@ -5,6 +5,8 @@ import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
@@ -30,6 +32,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import androidx.core.content.edit
+import com.example.pitwall.R
+import com.example.pitwall.data.UiState
 import com.example.pitwall.notification.RaceAlarmReceiver
 import com.example.pitwall.widget.WidgetConstants
 import kotlin.jvm.java
@@ -38,6 +42,8 @@ import kotlin.jvm.java
 //keby data boli v composable pri otoceni mobilu by sa vsetko stratilo
 //viewmodel zije dlhsie ako UI
 class F1ViewModel(application: Application) : AndroidViewModel(application) {
+    private val _currentScreen = MutableStateFlow<UiState>(UiState.Success)
+    val currentScreen: StateFlow<UiState> = _currentScreen
     private val db = PitWallDatabase.getDatabase(application)
     private val driverDao = db.favouriteDriverDao()
     private val constructorDao = db.favouriteConstructorDao()
@@ -88,12 +94,22 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
+    private fun isNetworkAvalaible(): Boolean {
+            val connectivityManager = getApplication<Application>()
+                .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
 
     private fun loadDriverStandings() {
         //viewmodelscope spusti korutinu naviazanu na zivotny cyklus viewmodelu
         //ked viewModel zanikne korutina sa automaticky zrusi - ziadne memory leaks
         viewModelScope.launch {
+            if (!isNetworkAvalaible()) {
+                _currentScreen.value = UiState.Error(R.string.no_internet)
+                return@launch
+            }
             try {
                 val response = RetrofitInstance.api.getDriverStandings()
                 val standings = response.mrData.standingsTable.standingsLists[0].driverStandings
@@ -125,8 +141,9 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                         .putString(WidgetConstants.KEY_DRIVER3_NAME, top3[2].fullName)
                         .putInt(WidgetConstants.KEY_DRIVER3_POINTS, top3[2].points)
                 }
+                _currentScreen.value = UiState.Success
             } catch (e: Exception) {
-                // zatiaľ len vypíšeme chybu
+                _currentScreen.value = UiState.Error(R.string.server_error)
                 e.printStackTrace()
             }
         }
@@ -134,6 +151,10 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadConstructorStandings() {
         viewModelScope.launch {
+            if (!isNetworkAvalaible()) {
+                _currentScreen.value = UiState.Error(R.string.no_internet)
+                return@launch
+            }
             try {
                 val response = RetrofitInstance.api.getConstructorStandings()
                 val standings = response.mrData.standingsTable.standingsLists[0].constructorStandings
@@ -160,8 +181,9 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                         .putString(WidgetConstants.KEY_CONSTRUCTOR3_NAME, top3[2].name)
                         .putInt(WidgetConstants.KEY_CONSTRUCTOR3_POINTS, top3[2].points)
                 }
+                _currentScreen.value = UiState.Success
             } catch (e: Exception) {
-                // zatiaľ len vypíšeme chybu
+                _currentScreen.value = UiState.Error(R.string.server_error)
                 e.printStackTrace()
             }
         }
@@ -169,6 +191,10 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadRaces() {
         viewModelScope.launch {
+            if (!isNetworkAvalaible()) {
+                _currentScreen.value = UiState.Error(R.string.no_internet)
+                return@launch
+            }
             try {
                 val response = RetrofitInstance.api.getRaceSchedule()
                 val races = response.mrData.raceTable.races
@@ -194,8 +220,9 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
                 loadNextRace()
+                _currentScreen.value = UiState.Success
             } catch (e: Exception) {
-                // zatiaľ len vypíšeme chybu
+                _currentScreen.value = UiState.Error(R.string.server_error)
                 e.printStackTrace()
             }
         }
@@ -213,6 +240,10 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadRaceResults() {
         viewModelScope.launch {
+            if (!isNetworkAvalaible()) {
+                _currentScreen.value = UiState.Error(R.string.no_internet)
+                return@launch
+            }
             try {
                 val response = RetrofitInstance.api.getRaceResults()
                 val races = response.mrData.raceTable.races
@@ -235,8 +266,9 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     )
                 }
+                _currentScreen.value = UiState.Success
             } catch (e: Exception) {
-                // zatiaľ len vypíšeme chybu
+                _currentScreen.value = UiState.Error(R.string.server_error)
                 e.printStackTrace()
             }
         }
@@ -297,5 +329,12 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
             raceTime,
             pendingIntent
         )
+    }
+    fun refresh() {
+        _currentScreen.value = UiState.Success
+        loadDriverStandings()
+        loadConstructorStandings()
+        loadRaces()
+        loadRaceResults()
     }
 }

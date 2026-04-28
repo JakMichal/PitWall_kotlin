@@ -54,4 +54,7 @@
     <string name="notification_title">Race in one hour!</string>
     <string name="notification_text">%s starts in one hour!</string>
     <string name="notification_channel_name">Race Reminder</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="server_error">Error at server, try again later</string>
+    <string name="retry">Try again</string>
 </resources>
