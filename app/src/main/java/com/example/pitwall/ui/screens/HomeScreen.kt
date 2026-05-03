@@ -162,7 +162,6 @@ fun NextRace(nextRace: Race, onRaceClick: (Race) -> Unit) {
             modifier = Modifier
                 .clickable { onRaceClick(nextRace) }
                 .fillMaxWidth()
-                .height(305.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .border(1.dp, Color.DarkGray, RoundedCornerShape(10.dp))
         ) {
@@ -245,7 +244,7 @@ fun NextRaceTimer(nextRace: Race) {
     val seconds = totalSeconds % 60
 
     //korutina na zivotny cyklus composable unit ako kluc znamenza spusti sa raz apri prvom zobrazeni a bezi az composable zmizne z ui
-    LaunchedEffect(Unit) {
+    LaunchedEffect(nextRace) {
         while (true) {
             totalSecondsState.longValue = ChronoUnit.SECONDS.between(
                 LocalDateTime.now(),
@@ -303,7 +302,7 @@ fun NextRaceCircuit(nextRace: Race) {
     Image(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(27.dp, 27.dp),
+            .padding(27.dp, 8.dp),
         contentScale = ContentScale.Fit,
         painter = painterResource(nextRace.circuitImage),
         contentDescription = nextRace.circuitName,
