@@ -246,9 +246,9 @@ fun NextRaceTimer(nextRace: Race) {
     //korutina na zivotny cyklus composable unit ako kluc znamenza spusti sa raz apri prvom zobrazeni a bezi az composable zmizne z ui
     LaunchedEffect(nextRace) {
         while (true) {
-            totalSecondsState.longValue = ChronoUnit.SECONDS.between(
-                LocalDateTime.now(),
-                nextRace.getRaceDateTime()
+            totalSecondsState.longValue = maxOf(
+                0L,
+                ChronoUnit.SECONDS.between(LocalDateTime.now(), nextRace.getRaceDateTime())
             )
             delay(1000L)
         }
