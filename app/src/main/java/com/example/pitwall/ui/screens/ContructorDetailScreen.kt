@@ -31,6 +31,17 @@ import com.example.pitwall.R
 import com.example.pitwall.data.Constructor
 import com.example.pitwall.data.Driver
 
+/**
+ * Constructor (team) detail screen.
+ *
+ * Displays the team logo, statistics, and a list of the team's drivers.
+ * Team drivers are filtered by matching [Driver.team] against [Constructor.name].
+ *
+ * @param constructorId Constructor identifier passed as a navigation argument.
+ * @param viewModel Shared ViewModel.
+ * @param onBack Callback to navigate back.
+ * @param onDriverClick Callback to navigate to a driver detail screen.
+ */
 @Composable
 fun ConstructorDetailScreen(
     constructorId: String,
@@ -71,6 +82,10 @@ fun ConstructorDetailScreen(
     }
 }
 
+/**
+ * Card showing the constructor logo, championship position, name, and nationality badge.
+ * @param constructor Constructor data.
+ */
 @Composable
 fun ConstructorDetailCard(constructor: Constructor) {
     DetailEntityCard {
@@ -93,6 +108,11 @@ fun ConstructorDetailCard(constructor: Constructor) {
         NationalityBadge(constructor.nationality)
     }
 }
+
+/**
+ * Statistics grid for a constructor — points and wins.
+ * @param constructor Constructor data.
+ */
 @Composable
 fun ConstructorDetailGrid(constructor: Constructor) {
     Row(
@@ -114,6 +134,13 @@ fun ConstructorDetailGrid(constructor: Constructor) {
     }
 }
 
+/**
+ * List of drivers belonging to the constructor's team.
+ * Each card is tappable and navigates to the driver detail screen.
+ *
+ * @param teamDrivers List of drivers filtered by team name.
+ * @param onDriverClick Callback to navigate to the driver detail screen.
+ */
 @Composable
 fun ConstructorDetailDrivers(teamDrivers: List<Driver>, onDriverClick: (String) -> Unit) {
     Text(stringResource(R.string.drivers), fontSize = 15.sp, color = Color.Red, modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp))

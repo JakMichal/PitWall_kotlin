@@ -3,16 +3,32 @@ package com.example.pitwall.api
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitInstance { //object je kotlin singleton - existuje presne jedna instancia v celej apke
+/**
+ * Singleton object providing a single Retrofit client instance throughout the app.
+ *
+ * Design patterns used: Singleton (Kotlin `object`) + Lazy initialization.
+ * Retrofit is not created at app startup — it is instantiated only when first used,
+ * saving resources during initialization.
+ *
+ * Base URL: Jolpica mirror of the Ergast F1 API.
+ */
+object RetrofitInstance {
+
+    /** Base URL for all API calls. All endpoints are relative to this address. */
     private const val BASE_URL = "https://api.jolpi.ca/ergast/f1/"
 
-    // by lazy inicializacia sa odlozi na moment ked sa api prvykrat pouzije,
-    //Retrofit sa nevytvori pri starte apky ale az ked ho skutocne potrebuje, uspora zdrojov
+    /**
+     * Lazily initialized implementation of [F1ApiService].
+     *
+     * Retrofit dynamically generates an implementation of the [F1ApiService] interface
+     * based on its annotations. GsonConverterFactory automatically deserializes
+     * JSON responses into the corresponding DTO classes.
+     */
     val api: F1ApiService by lazy {
-        Retrofit.Builder() //navrhovy vzor nastavim parametre a na konci zavolam build
-            .baseUrl(BASE_URL) //vsetky api volania budu relativne k tejto url
-            .addConverterFactory(GsonConverterFactory.create()) //json odpovede prevadza pomocou gson
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(F1ApiService::class.java) //dynamicky implementuje rozhranie F1apiservice
+            .create(F1ApiService::class.java)
     }
 }

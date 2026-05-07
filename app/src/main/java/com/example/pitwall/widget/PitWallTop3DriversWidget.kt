@@ -26,8 +26,28 @@ import androidx.glance.text.FontWeight
 import com.example.pitwall.R
 import androidx.glance.unit.ColorProvider
 
+/**
+ * Jetpack Glance home screen widget displaying the top 3 drivers
+ * in the current Drivers' Championship.
+ *
+ * Data is read from SharedPreferences under the keys defined in [WidgetConstants],
+ * where it was previously saved by F1ViewModel after a successful API response.
+ * The widget does not have direct access to the ViewModel, so SharedPreferences
+ * serves as the communication bridge between the app and the widget.
+ */
 @SuppressLint("RestrictedApi")
 class PitWallTop3DriversWidget : GlanceAppWidget() {
+
+    /**
+     * Called by the Glance framework to provide the widget content.
+     *
+     * Reads the top 3 driver names and points from SharedPreferences and
+     * renders them in a [Column] layout using Glance composables.
+     * Falls back to "-" and 0 if no data has been saved yet.
+     *
+     * @param context Application context provided by the Glance framework.
+     * @param id Unique identifier of this widget instance.
+     */
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val prefs = context.getSharedPreferences(WidgetConstants.PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -81,6 +101,14 @@ class PitWallTop3DriversWidget : GlanceAppWidget() {
     }
 }
 
+
+/**
+ * [GlanceAppWidgetReceiver] for [PitWallTop3DriversWidget].
+ *
+ * Registered in AndroidManifest.xml as a BroadcastReceiver.
+ * The system uses this receiver to request widget updates and bind
+ * the widget to its [GlanceAppWidget] implementation.
+ */
 class PitWallTop3DriversWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = PitWallTop3DriversWidget()
 }

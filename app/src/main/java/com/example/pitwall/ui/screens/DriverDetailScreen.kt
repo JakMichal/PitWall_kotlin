@@ -40,6 +40,17 @@ import com.example.pitwall.viewmodel.F1ViewModel
 import com.example.pitwall.R
 import com.example.pitwall.data.Driver
 
+/**
+ * Driver detail screen.
+ *
+ * Looks up the driver by [driverId] in [F1ViewModel.driverStandings].
+ * If the driver is not found (e.g. data has not loaded yet), displays an error message.
+ * Allows the user to add or remove the driver from favourites.
+ *
+ * @param driverId Driver identifier passed as a navigation argument.
+ * @param viewModel Shared ViewModel.
+ * @param onBack Callback to navigate back to the previous screen.
+ */
 @Composable
 fun DriverDetailScreen(
     driverId: String,
@@ -71,6 +82,15 @@ fun DriverDetailScreen(
         item { DriverDetailGrid(driver) }
     }
 }
+
+/**
+ * Detail screen header with a back arrow, title, and favourites toggle button.
+ *
+ * @param headerText Title text displayed in the center of the header.
+ * @param onBack Callback to navigate back.
+ * @param onFavouriteClick Callback invoked when the heart icon is tapped.
+ * @param isFavourite If true, the heart icon is filled; otherwise it is outlined.
+ */
 @Composable
 fun DetailHeader(
     headerText: String,
@@ -104,6 +124,12 @@ fun DetailHeader(
         )
     }
 }
+
+/**
+ * Card showing the driver's photo, racing number, full name, team, and nationality badge.
+ * The photo is only displayed if [Driver.image] is not 0.
+ * @param driver Driver data.
+ */
 @Composable
 fun DriverDetailCard(driver: Driver) {
     DetailEntityCard {
@@ -125,6 +151,12 @@ fun DriverDetailCard(driver: Driver) {
         NationalityBadge(driver.nationality)
     }
 }
+
+/**
+ * Generic card container used for both driver and constructor detail screens.
+ * Centers its content inside a fixed-size card.
+ * @param content Composable content placed inside the card.
+ */
 @Composable
 fun DetailEntityCard(content: @Composable () -> Unit) {
     Card(
@@ -147,6 +179,11 @@ fun DetailEntityCard(content: @Composable () -> Unit) {
         }
     }
 }
+
+/**
+ * Colored badge displaying a nationality (of a driver or constructor).
+ * @param nationality Nationality text to display.
+ */
 @Composable
 fun NationalityBadge(nationality: String) {
     Text(
@@ -158,6 +195,10 @@ fun NationalityBadge(nationality: String) {
     )
 }
 
+/**
+ * Statistics grid for a driver — points, wins, championship position, and driver code.
+ * @param driver Driver data.
+ */
 @Composable
 fun DriverDetailGrid(driver: Driver) {
     Row(
@@ -181,6 +222,14 @@ fun DriverDetailGrid(driver: Driver) {
 
 }
 
+/**
+ * Reusable statistic card displaying a value and its label.
+ * Used in driver details, constructor details, and the BottomSheet.
+ *
+ * @param value Value to display (e.g. "324").
+ * @param label Description of the value (e.g. "Points").
+ * @param modifier Modifier — typically carries weight from the enclosing RowScope.
+ */
 @Composable
 fun StatCard(value: String, label: String, modifier: Modifier = Modifier) {
     Card(

@@ -57,7 +57,20 @@ import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallTheme
 import com.example.pitwall.viewmodel.F1ViewModel
 
+
+/**
+ * The sole Activity of the PitWall application.
+ *
+ * Sets up the Compose UI and creates [F1ViewModel] using
+ * [ViewModelProvider.AndroidViewModelFactory], which is required for
+ * AndroidViewModel because it needs the Application context.
+ */
 class MainActivity : AppCompatActivity() {
+
+    /**
+     * Called when the Activity is first created.
+     * Enables edge-to-edge display and sets the root Compose content.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -75,11 +88,31 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+/**
+ * Data class representing a single item in the bottom navigation bar.
+ *
+ * @property route Navigation route string used by NavController.
+ * @property labelRes Resource ID of the item's text label.
+ * @property iconRes Resource ID of the item's icon.
+ */
 private data class NavDestination (
     val route: String,
     val labelRes: Int,
     val iconRes: Int
 )
+
+/**
+ * Root composable responsible for navigation and global UI state.
+ *
+ * Responsible for:
+ * - Creating the NavController and defining the navigation graph.
+ * - Managing the ModalBottomSheet state (race detail display).
+ * - Rendering the Scaffold with PitWallBottomBar.
+ * - A gradient overlay for a smooth transition between content and the navigation bar.
+ *
+ * @param modifier Modifier for the root container.
+ * @param viewModel Shared ViewModel for all screens.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangeScreen(
@@ -93,7 +126,7 @@ fun ChangeScreen(
     val showBottomSheet = showBottomSheetState.value
 
     val selectedRaceState = remember { mutableStateOf<Race?>(null) }
-    val selectedRace = selectedRaceState.value  //riesenie namiesto remember by pretoze ide hadzal error lebo nevedel to analyzovat
+    val selectedRace = selectedRaceState.value
 
     val raceResult by viewModel.raceResult.collectAsState()
     val uiState by viewModel.currentScreen.collectAsState()
@@ -108,7 +141,6 @@ fun ChangeScreen(
             }
         }
     }
-    //material3 layout stara sa o spravne rozmiesntenie topBar BottomBar a content
     Scaffold(
         containerColor = PitWallBackground,
         bottomBar = {
@@ -209,8 +241,16 @@ fun ChangeScreen(
     }
 }
 
-
-
+/**
+ * Composable for the app's bottom navigation bar.
+ *
+ * Displays four navigation items (Home, Schedule, Stats, Favourite)
+ * inside a visually distinct card with rounded corners.
+ * The active item is highlighted with a red indicator.
+ *
+ * @param currentRoute The current NavController route — determines the active item.
+ * @param onNavigate Callback invoked when an item is tapped; receives the target route.
+ */
 @Composable
 private fun PitWallBottomBar(
     currentRoute: String?,

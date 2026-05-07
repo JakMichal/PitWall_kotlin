@@ -59,12 +59,26 @@ import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
+/**
+ * The app's main screen.
+ *
+ * Displays in a [LazyColumn]:
+ * - App logo and language switcher ([HeaderLogo])
+ * - Next race card with a countdown timer ([NextRace])
+ * - Navigation buttons to Schedule and Stats
+ * - Top 3 preview of the Drivers' and Constructors' Championships ([ChampionshipCard])
+ *
+ * @param onRaceClick Callback invoked when the user taps a race card.
+ * @param modifier Modifier for the root LazyColumn.
+ * @param onNavigateToStats Callback to navigate to the Stats screen.
+ * @param onNavigateToSchedule Callback to navigate to the Schedule screen.
+ * @param viewModel Shared ViewModel.
+ */
 @Composable
 fun HomeScreen(onRaceClick: (Race) -> Unit, modifier: Modifier = Modifier, onNavigateToStats: () -> Unit, onNavigateToSchedule: () -> Unit, viewModel: F1ViewModel) {
     val drivers by viewModel.driverStandings.collectAsState()
     val constructors by viewModel.constructorStandings.collectAsState()
-    val nextRace by viewModel.nextRace.collectAsState() //collectAsState compose funkcia ktora sleduje stateflow a prekresli composeable
-    //zakazdym ked sa zmeni hodnota. By je kotlin delegat skratka pre .value
+    val nextRace by viewModel.nextRace.collectAsState()
     val showLanguageMenu = remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -97,9 +111,19 @@ fun HomeScreen(onRaceClick: (Race) -> Unit, modifier: Modifier = Modifier, onNav
             })
         }
     }
-
-
 }
+
+/**
+ * Screen header displaying the app logo and a language switch button.
+ *
+ * The language is changed via [AppCompatDelegate.setApplicationLocales],
+ * which applies the change without restarting the app. String resources
+ * are therefore updated automatically — this is why strings are resolved
+ * in the UI layer (not in the ViewModel), so that language switching works correctly.
+ *
+ * @param onLanguageClick Callback invoked when the language icon is tapped.
+ * @param showLanguageMenu State controlling the visibility of the dropdown menu.
+ */
 @Composable
 fun HeaderLogo(onLanguageClick: () -> Unit, showLanguageMenu: MutableState<Boolean>) {
     Row(
@@ -150,6 +174,13 @@ fun HeaderLogo(onLanguageClick: () -> Unit, showLanguageMenu: MutableState<Boole
     }
 }
 
+/**
+ * Card for the nearest upcoming race, showing a background image, race name,
+ * and a live countdown timer.
+ *
+ * @param nextRace Data of the nearest race.
+ * @param onRaceClick Callback invoked when the card is tapped.
+ */
 @Composable
 fun NextRace(nextRace: Race, onRaceClick: (Race) -> Unit) {
     Column(
@@ -181,6 +212,7 @@ fun NextRace(nextRace: Race, onRaceClick: (Race) -> Unit) {
     }
 }
 
+/** Race card background — circuit background image. @param nextRace Race whose background is shown. */
 @Composable
 fun NextRaceCard(nextRace: Race) {
     Card(
@@ -199,6 +231,7 @@ fun NextRaceCard(nextRace: Race) {
     ) { }
 }
 
+/** Semi-transparent black overlay reducing background contrast for better text readability. */
 @Composable
 fun BlackOverlay() {
     Box(
@@ -209,6 +242,7 @@ fun BlackOverlay() {
     ) { }
 }
 
+/** Displays the race name, circuit name, and round number. @param nextRace Race data. */
 @Composable
 fun NextRaceName(nextRace: Race) {
     Column(
@@ -234,6 +268,15 @@ fun NextRaceName(nextRace: Race) {
     }
 }
 
+/**
+ * Live countdown timer showing the time remaining until the next race starts.
+ *
+ * Uses [LaunchedEffect] with key [Unit] — the coroutine is launched once
+ * when the composable first enters the composition and ticks every second using [delay].
+ * Displays days, hours, minutes, and seconds.
+ *
+ * @param nextRace Race whose start time is counted down to.
+ */
 @Composable
 fun NextRaceTimer(nextRace: Race) {
     val totalSecondsState = remember { mutableLongStateOf(0L) }
@@ -282,6 +325,13 @@ fun NextRaceTimer(nextRace: Race) {
         }
     }
 }
+
+/**
+ * A single time unit column in the countdown timer (e.g. "05 / days").
+ *
+ * @param value Numeric value of the time unit.
+ * @param labelRes Resource ID of the unit label (days / hours / minutes / seconds).
+ */
 @Composable
 private fun TimeUnit(value: Long, labelRes: Int) {
     Column(
@@ -297,6 +347,7 @@ private fun TimeUnit(value: Long, labelRes: Int) {
     }
 }
 
+/** Circuit map image displayed on the next race card. @param nextRace Race data. */
 @Composable
 fun NextRaceCircuit(nextRace: Race) {
     Image(
@@ -310,6 +361,14 @@ fun NextRaceCircuit(nextRace: Race) {
     )
 }
 
+/**
+ * Navigation button leading to another screen.
+ *
+ * @param change Button label text.
+ * @param onNavigateToScreen Callback invoked on tap.
+ * @param drawable Resource ID of the button icon.
+ * @param modifier Modifier — typically carries weight from the enclosing RowScope.
+ */
 @Composable
 fun ToScreenButton(change:String, onNavigateToScreen: () -> Unit, drawable: Int,modifier: Modifier = Modifier) {
     OutlinedButton(
@@ -334,6 +393,15 @@ fun ToScreenButton(change:String, onNavigateToScreen: () -> Unit, drawable: Int,
     }
 }
 
+/**
+ * Card displaying the top 3 in a championship (drivers or constructors).
+ *
+ * For each item, shows the position, name, points total, and a progress bar
+ * representing the item's share of points relative to the leader.
+ *
+ * @param title Championship title (e.g. "Driver Championship").
+ * @param items List of top 3 items to display.
+ */
 @Composable
 fun ChampionshipCard(title: String, items: List<StandingItem>) {
     Column(

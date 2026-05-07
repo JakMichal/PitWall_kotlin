@@ -8,13 +8,31 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.example.pitwall.R
 
+/**
+ * BroadcastReceiver responsible for displaying a race reminder notification.
+ *
+ * Triggered by the system at the time scheduled via AlarmManager in F1ViewModel.
+ * The notification is shown one hour before the start of the next race.
+ */
 class RaceAlarmReceiver : BroadcastReceiver() {
 
     companion object {
+        /** ID of the notification channel used for race reminders. */
         const val CHANNEL_ID = "race_reminder"
+
+        /** Intent extra key carrying the name of the upcoming race. */
         const val EXTRA_RACE_NAME = "race_name"
     }
 
+    /**
+     * Called by the system when the alarm fires.
+     *
+     * Creates (or updates) the notification channel and displays a notification
+     * containing the name of the upcoming race.
+     *
+     * @param context Application context.
+     * @param intent Intent containing the race name under the key [EXTRA_RACE_NAME].
+     */
     override fun onReceive(context: Context, intent: Intent) {
         val raceName = intent.getStringExtra(EXTRA_RACE_NAME) ?: "Race"
 

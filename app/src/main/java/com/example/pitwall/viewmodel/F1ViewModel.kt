@@ -38,43 +38,82 @@ import com.example.pitwall.notification.RaceAlarmReceiver
 import com.example.pitwall.widget.WidgetConstants
 import kotlin.jvm.java
 
-//ViewModel je trieda, ktorá prežije rotáciu obrazovky.
-//keby data boli v composable pri otoceni mobilu by sa vsetko stratilo
-//viewmodel zije dlhsie ako UI
+/**
+ * Main ViewModel of the PitWall application.
+ *
+ * Extends [AndroidViewModel], which grants access to the [Application] context —
+ * required for the Room database and widget SharedPreferences.
+ *
+ * The ViewModel survives screen rotation. All data is preserved because
+ * the ViewModel's lifecycle is longer than that of any Composable.
+ *
+ * Naming convention: a private [MutableStateFlow] prefixed with `_` is writable
+ * only inside the ViewModel; the public [StateFlow] without the prefix is
+ * read-only for the UI layer.
+ *
+ * @param application Application instance — required by [AndroidViewModel].
+ */
 class F1ViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentScreen = MutableStateFlow<UiState>(UiState.Success)
+
+    /**
+     * Current UI state of the application.
+     *
+     * [UiState.Success] means data loaded correctly and the screen is displayed normally.
+     * [UiState.Error] carries a string resource ID with the error message to display —
+     * the resource is resolved in the UI layer (not here) so that language switching works correctly.
+     */
     val currentScreen: StateFlow<UiState> = _currentScreen
     private val db = PitWallDatabase.getDatabase(application)
     private val driverDao = db.favouriteDriverDao()
     private val constructorDao = db.favouriteConstructorDao()
 
     private val _favouriteDrivers = MutableStateFlow<List<FavouriteDriver>>(emptyList())
+
+    /** List of favourite drivers stored in the Room database. */
     val favouriteDrivers: StateFlow<List<FavouriteDriver>> = _favouriteDrivers
 
     private val _favouriteConstructors = MutableStateFlow<List<FavouriteConstructor>>(emptyList())
+
+    /** List of favourite constructors stored in the Room database. */
     val favouriteConstructors: StateFlow<List<FavouriteConstructor>> = _favouriteConstructors
 
-    //_driverStandings - konvencia oznacenie aby sme vedeli ze je sukromna a iba viewModel
-    //don moze zapisovat
     private val _driverStandings = MutableStateFlow<List<Driver>>(emptyList())
+
+    /**
+     * List of drivers ordered by their championship standings position.
+     * Updated after a successful API response.
+     */
     val driverStandings: StateFlow<List<Driver>> = _driverStandings
-    //verejny iba na citanie pre UI
-    //StateFlow je reaktívny stream, ked sa zmeni hodnota vsetky composable ktore ho sleduju
-    //sa automaticky prekresli
 
     private val _constructorStandings = MutableStateFlow<List<Constructor>>(emptyList())
+
+    /** List of constructors ordered by their Constructors' Championship position. */
     val constructorStandings: StateFlow<List<Constructor>> = _constructorStandings
 
     private val _races = MutableStateFlow<List<Race>>(emptyList())
+
+    /** List of all races in the current season. */
     val races: StateFlow<List<Race>> = _races
 
     private val _nextRace = MutableStateFlow<Race?>(null)
+
+    /**
+     * The nearest upcoming race, or null if the season has ended.
+     * Determined as the race with the smallest positive time difference from now.
+     */
     val nextRace: StateFlow<Race?> = _nextRace
 
     private val _raceResult = MutableStateFlow<List<RaceResult>>(emptyList())
+
+    /** Results of completed races in the current season. */
     val raceResult: StateFlow<List<RaceResult>> = _raceResult
 
-    //init blok sa spusti hned pri vytvoreni viewModelu. ihned zacne stahovat data z api
+    /**
+     * Initialization block — executed when the ViewModel is first created.
+     * Immediately triggers loading of all data from the API
+     * and starts observing the Room database.
+     */
     init {
         loadDriverStandings()
         loadConstructorStandings()
@@ -94,6 +133,16 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Checks whether the device currently has an active internet connection.
+     *
+     * Uses [ConnectivityManager] and [NetworkCapabilities] to verify that
+     * the active network has the [NetworkCapabilities.NET_CAPABILITY_INTERNET] capability.
+     * This check is performed before every API call to provide a meaningful
+     * error message instead of a generic network exception.
+     *
+     * @return true if internet is available, false otherwise.
+     */
     private fun isNetworkAvalaible(): Boolean {
             val connectivityManager = getApplication<Application>()
                 .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -102,6 +151,11 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
+    /**
+     * Asynchronously loads the driver standings from the API and maps DTOs to domain models.
+     * After a successful response, saves the top 3 drivers to SharedPreferences for the widget.
+     * Errors are caught and printed to the log without disrupting the UI.
+     */
     private fun loadDriverStandings() {
         //viewmodelscope spusti korutinu naviazanu na zivotny cyklus viewmodelu
         //ked viewModel zanikne korutina sa automaticky zrusi - ziadne memory leaks
@@ -149,6 +203,11 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Asynchronously loads the Constructors' Championship standings from the API
+     * and maps DTOs to domain models.
+     * After a successful response, saves the top 3 constructors to SharedPreferences for the widget.
+     */
     private fun loadConstructorStandings() {
         viewModelScope.launch {
             if (!isNetworkAvalaible()) {
@@ -189,6 +248,12 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Asynchronously loads the race schedule from the API.
+     * Static circuit data (lap count, length, images) is supplemented from local maps,
+     * because the API does not provide this data on the free tier.
+     * After loading, automatically calls [loadNextRace].
+     */
     private fun loadRaces() {
         viewModelScope.launch {
             if (!isNetworkAvalaible()) {
@@ -228,6 +293,13 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Determines the nearest upcoming race from the [_races] list.
+     *
+     * Filters races with a start time in the future and selects the one
+     * with the smallest number of seconds remaining. After determining
+     * the next race, schedules a reminder via [scheduleRaceReminder].
+     */
     private fun loadNextRace() {
         _nextRace.value = _races.value
             .filter { race -> race.getRaceDateTime() > LocalDateTime.now() }
@@ -238,6 +310,10 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         _nextRace.value?.let { scheduleRaceReminder(it) }
     }
 
+    /**
+     * Asynchronously loads the results of completed races from the API.
+     * Maps DTOs to domain models [RaceResult] and [DriverResult].
+     */
     private fun loadRaceResults() {
         viewModelScope.launch {
             if (!isNetworkAvalaible()) {
@@ -274,6 +350,10 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Adds a driver to the favourites list in the Room database.
+     * @param driverId Identifier of the driver to add.
+     */
     fun addFavouriteDriver(driverId: String) {
         //spusti korutinu bez brzdenia UI
         viewModelScope.launch {
@@ -281,12 +361,20 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Removes a driver from the favourites list in the Room database.
+     * @param driverId Identifier of the driver to remove.
+     */
     fun removeFavouriteDriver(driverId: String) {
         viewModelScope.launch {
             driverDao.delete(FavouriteDriver(driverId = driverId))
         }
     }
 
+    /**
+     * Adds a constructor to the favourites list in the Room database.
+     * @param constructorId Identifier of the constructor to add.
+     */
     fun addFavouriteConstructor(constructorId: String) {
         //spusti korutinu bez brzdenia UI
         viewModelScope.launch {
@@ -294,12 +382,25 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Removes a constructor from the favourites list in the Room database.
+     * @param constructorId Identifier of the constructor to remove.
+     */
     fun removeFavouriteConstructor(constructorId: String) {
         viewModelScope.launch {
             constructorDao.delete(FavouriteConstructor(constructorId = constructorId))
         }
     }
 
+    /**
+     * Schedules a reminder for the nearest upcoming race using [AlarmManager].
+     *
+     * The alarm fires one hour before the race start and triggers [RaceAlarmReceiver],
+     * which displays a notification. On Android 12+ (API level 31), the
+     * SCHEDULE_EXACT_ALARM permission is verified before scheduling.
+     *
+     * @param race The race for which the reminder should be scheduled.
+     */
     private fun scheduleRaceReminder(race: Race) {
         val alarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -330,6 +431,14 @@ class F1ViewModel(application: Application) : AndroidViewModel(application) {
             pendingIntent
         )
     }
+
+    /**
+     * Reloads all data from the API.
+     *
+     * Resets [currentScreen] to [UiState.Success] before triggering the load functions,
+     * so that any previously displayed error is cleared while fresh data is being fetched.
+     * Intended to be called from the UI when the user manually requests a data refresh.
+     */
     fun refresh() {
         _currentScreen.value = UiState.Success
         loadDriverStandings()

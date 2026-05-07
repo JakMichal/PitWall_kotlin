@@ -6,6 +6,21 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/**
+ * Domain model representing an F1 driver.
+ *
+ * @property driverId The driver's unique identifier from the API (e.g., "max_verstappen").
+ * @property number The driver's race number.
+ * @property code The driver's three-letter code (e.g., "VER").
+ * @property firstName The driver's first name.
+ * @property lastName The driver's last name.
+ * @property nationality The driver's nationality.
+ * @property team The name of the team the driver races for (as a string — intentional simplification).
+ * @property points Total points in the current season.
+ * @property wins Number of wins in the current season.
+ * @property position Current position in the championship.
+ * @property image Resource ID of the racer's image, or 0 if no image is available.
+ */
 data class Driver(
     val driverId: String,
     val number: String,
@@ -22,7 +37,17 @@ data class Driver(
 ) {
     val fullName get() = "$firstName $lastName"
 }
-
+/**
+ * Domain model representing an F1 constructor (team).
+ *
+ * @property constructorId Unique team identifier from the API (e.g., "red_bull").
+ * @property name Display name of the team.
+ * @property nationality Team nationality.
+ * @property points Total number of points in the current season.
+ * @property wins Number of wins in the current season.
+ * @property position Current position in the constructors championship.
+ * @property image Resource ID of the team logo, or 0 if the logo is not available.
+ */
 data class Constructor(
     val constructorId: String,
     val name: String,
@@ -32,7 +57,15 @@ data class Constructor(
     val position: Int,
     val image: Int
 )
-
+/**
+ * A helper model used in UI-level ranking lists.
+ * It is used to display both drivers and constructors consistently within the same composable.
+ *
+ * @property id Item identifier (driverId or constructorId).
+ * @property name Display name of the item.
+ * @property points Number of points.
+ * @property subTitle Optional subtitle (e.g., team name for drivers).
+ */
 data class StandingItem(
     val id: String,
     val name: String,
@@ -40,6 +73,31 @@ data class StandingItem(
     val subTitle: String? = null
 )
 
+/**
+ * A domain model representing a single F1 race.
+ *
+ * Static circuit data (number of laps, length, images) is loaded from local maps
+ * [circuitLaps], [circuitLength], [circuitBackgrounds], and [circuitTrackImages], because
+ * the Jolpica API does not provide this data (paid endpoints).
+ *
+ * @property round The lap number in the season.
+ * @property raceName The race name.
+ * @property circuitId The unique circuit identifier from the API.
+ * @property circuitName The displayed circuit name.
+ * @property country The country where the race takes place.
+ * @property date Race date in "yyyy-MM-dd" format.
+ * @property time Start time in "HH:mm" format in UTC.
+ * @property laps Number of race laps (static data).
+ * @property length Circuit length in km (static data).
+ * @property backgroundImage Resource ID of the race card background.
+ * @property circuitImage Resource ID of the circuit map image.
+ * @property firstPractice Date and time of the first practice session, or null if not taking place.
+ * @property secondPractice Date and time of the second practice session, or null if not taking place.
+ * @property thirdPractice Date and time of the third practice session, or null if not taking place.
+ * @property qualifying Date and time of qualifying, or null if not taking place.
+ * @property sprint Date and time of the sprint, or null if it is not a sprint weekend.
+ * @property sprintQualifying Date and time of sprint qualifying, or null.
+ */
 data class Race(
     val round: Int,
     val raceName: String,
@@ -59,17 +117,34 @@ data class Race(
     val sprint: Pair<String, String>? = null,
     val sprintQualifying: Pair<String, String>? = null,
 ) {
+    /**
+     * Converts the race date and time from UTC to the device's local time.
+     *
+     * The API returns times in UTC. This function converts them to [LocalDateTime]
+     * based on the device's time zone so that the countdown timer displays the correct time.
+     *
+     * @return The race date and time in the device's local time zone.
+     */
     fun getRaceDateTime() : LocalDateTime {
-        val dateTime = "${date}T${time}:00" //T - lebo je to len format ako standard pre ISO_LOCAL_DATE_TIME
+        val dateTime = "${date}T${time}:00" //T - is format for ISO_LOCAL_DATE_TIME
         return LocalDateTime.parse(dateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
             .atZone(ZoneOffset.UTC) //14:00 UTC
-            .withZoneSameInstant(ZoneId.systemDefault()) //UTC so zariadenia 14:00 -> 16:00 UTC+2
-            .toLocalDateTime() // aby to vratile localDateTime a nie ZonedDateTime pre pracu s casom
+            .withZoneSameInstant(ZoneId.systemDefault()) //UTC from device 14:00 -> 16:00 UTC+2
+            .toLocalDateTime() // return localDateTime instead of ZonedDateTime
     }
 
 }
 
-
+/**
+ * Reusult of single drive in a single race.
+ *
+ * @property position Finished position in a single race.
+ * @property driverCode Three-letter driver code.
+ * @property driverName Driver's full name.
+ * @property team Driver's tema name.
+ * @property points Number of points earned.
+ * @property status Finish status (e.g. 'Finished', '+1 Lap', 'DNF').
+ */
 data class DriverResult(
     val position: Int,
     val driverCode: String,
@@ -79,6 +154,16 @@ data class DriverResult(
     val status: String
 )
 
+/**
+ * Results for the entire race, including the standings for all drivers.
+ *
+ * @property round The round number in the season.
+ * @property raceName The race name.
+ * @property circuitName The circuit name.
+ * @property country The host country.
+ * @property date The race date.
+ * @property driverResults A sorted list of driver results.
+ */
 data class RaceResult(
     val round: Int,
     val raceName: String,
@@ -88,7 +173,10 @@ data class RaceResult(
     val driverResults: List<DriverResult>
 )
 
-// Statické dáta okruhov — počet kôl
+/**
+ * Static data: the number of laps for each circuit indentified by circuidId.
+ * This data is hard-coded because tje Jolpica API does not provide it for free.
+ */
 val circuitLaps = mapOf(
     "albert_park"        to 58,
     "shanghai"           to 56,
@@ -116,7 +204,7 @@ val circuitLaps = mapOf(
     "yas_marina"         to 58
 )
 
-// Statické dáta okruhov — dĺžka v km
+/** Static data: circuit length in km for each circuit identified by circuidId. */
 val circuitLength = mapOf(
     "albert_park"        to 5.278,
     "shanghai"           to 5.451,
@@ -144,6 +232,7 @@ val circuitLength = mapOf(
     "yas_marina"         to 5.281
 )
 
+/** Static data: resource ID of the race card background for each circuit. */
 val circuitBackgrounds = mapOf(
     "albert_park"        to R.drawable.albertparkbackground,
     "shanghai"           to R.drawable.shanghaibackground,
@@ -171,6 +260,7 @@ val circuitBackgrounds = mapOf(
     "yas_marina"         to R.drawable.yasmarinabackground
 )
 
+/** Static data: resource ID of the circuit map image for each circuit. */
 val circuitTrackImages = mapOf(
     "albert_park"        to R.drawable.albertparkcircuit,
     "shanghai"           to R.drawable.shanghaicircuit,
@@ -198,6 +288,7 @@ val circuitTrackImages = mapOf(
     "yas_marina"         to R.drawable.yasmarinacircuit
 )
 
+/** Mapping of driverId to the resource ID of the driver's photo. */
 val driversPictures = mapOf(
     "albon"             to R.drawable.albon,
     "alonso"            to R.drawable.fernandoalonso,
@@ -223,6 +314,7 @@ val driversPictures = mapOf(
     "russell"            to R.drawable.georgerussel,
 )
 
+/** Mapping of constructorId to the resource ID of the constructor's logo. */
 val constructorsPictures = mapOf(
     "mercedes"       to R.drawable.mercedes,
     "ferrari"        to R.drawable.ferrari,
@@ -238,6 +330,13 @@ val constructorsPictures = mapOf(
     "rb"             to R.drawable.racingbulls
 )
 
+/**
+ * Race status in the season calendar.
+ *
+ * - FINISHED - the race has already taken place.
+ * - NEXT - the next upcoming race.
+ * - UPCOMING - a race in the future but not the next one.
+ */
 enum class RaceStatus {
     FINISHED, NEXT, UPCOMING
 }

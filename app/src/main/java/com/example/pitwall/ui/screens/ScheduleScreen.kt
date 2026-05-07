@@ -1,6 +1,5 @@
 package com.example.pitwall.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,21 +34,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pitwall.ChangeScreen
 import com.example.pitwall.R
 import com.example.pitwall.data.Race
 import com.example.pitwall.data.RaceStatus
-import com.example.pitwall.ui.theme.PitWallTheme
 import com.example.pitwall.viewmodel.F1ViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+/**
+ * Race calendar screen for the current season.
+ *
+ * Displays all races in a [LazyColumn]. The list is automatically
+ * scrolled to the nearest upcoming race (nextRace) using initialFirstVisibleItemIndex.
+ *
+ * @param viewModel Shared ViewModel.
+ * @param onRaceClick Callback invoked when a race card is tapped.
+ */
 @Composable
 fun ScheduleScreen(viewModel: F1ViewModel, onRaceClick: (Race) -> Unit) {
     val races by viewModel.races.collectAsState()
@@ -70,6 +74,21 @@ fun ScheduleScreen(viewModel: F1ViewModel, onRaceClick: (Race) -> Unit) {
     }
 }
 
+/**
+ * Card for a single race in the calendar.
+ *
+ * The race status ([RaceStatus]) is determined by comparing the current time
+ * with the race start time:
+ * - negative difference → [RaceStatus.FINISHED]
+ * - matches [nextRace] → [RaceStatus.NEXT]
+ * - otherwise → [RaceStatus.UPCOMING]
+ *
+ * The card border color visually distinguishes the race status.
+ *
+ * @param currentRace Race represented by this card.
+ * @param nextRace The nearest upcoming race (used for comparison).
+ * @param onRaceClick Callback invoked on tap.
+ */
 @Composable
 fun RaceCard(currentRace: Race, nextRace : Race?, onRaceClick: (Race) -> Unit) {
 
@@ -112,6 +131,7 @@ fun RaceCard(currentRace: Race, nextRace : Race?, onRaceClick: (Race) -> Unit) {
 
 }
 
+/** Background image of the race card in the calendar. @param currentRace Race data. */
 @Composable
 fun CurrentRaceBackground(currentRace: Race) {
     Card(
@@ -131,6 +151,13 @@ fun CurrentRaceBackground(currentRace: Race) {
     ) { }
 }
 
+/**
+ * Text information about the race displayed on the calendar card.
+ * Shows country, race name, circuit, date, and race status.
+ *
+ * @param currentRace Race data.
+ * @param raceStatus Computed status of the race.
+ */
 @Composable
 fun CurrentRaceInfo(currentRace: Race, raceStatus: RaceStatus) {
     val formattedDate = LocalDate.parse(currentRace.date)
@@ -148,16 +175,5 @@ fun CurrentRaceInfo(currentRace: Race, raceStatus: RaceStatus) {
             RaceStatus.UPCOMING -> Text(stringResource(R.string.upcoming), color = Color.LightGray, fontStyle = FontStyle.Italic)
             RaceStatus.FINISHED -> Text(stringResource(R.string.finished), color = Color.Gray)
         }
-    }
-}
-
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun SchedulePrevieww() {
-    PitWallTheme {
-        val viewModel: F1ViewModel = viewModel()
-        ChangeScreen(
-            viewModel = viewModel
-        )
     }
 }

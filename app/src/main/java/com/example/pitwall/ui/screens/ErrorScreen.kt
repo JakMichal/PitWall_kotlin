@@ -25,6 +25,18 @@ import com.example.pitwall.R
 import com.example.pitwall.ui.theme.PitWallBackground
 import com.example.pitwall.ui.theme.PitWallRed
 
+/**
+ * Full-screen error state displayed when data loading fails.
+ *
+ * Shows a Wi-Fi off icon, a localized error message, and a retry button.
+ * The language switcher remains accessible so the user can change the language
+ * even when the app is in an error state.
+ *
+ * @param message String resource ID of the error message to display
+ * (e.g. [R.string.no_internet] or [R.string.server_error]).
+ * @param onRetry Callback invoked when the user taps the retry button —
+ * typically calls F1ViewModel.refresh.
+ */
 @Composable
 fun ErrorScreen(message: Int, onRetry: () -> Unit) {
     val showLanguageMenu = remember { mutableStateOf(false) }

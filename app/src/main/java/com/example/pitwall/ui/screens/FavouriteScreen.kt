@@ -39,6 +39,17 @@ import androidx.compose.ui.unit.sp
 import com.example.pitwall.R
 import com.example.pitwall.viewmodel.F1ViewModel
 
+/**
+ * Favourites screen showing saved drivers and constructors.
+ *
+ * Combines data from the Room database (favouriteDrivers, favouriteConstructors)
+ * with live API data (driverStandings, constructorStandings) to display
+ * up-to-date information about each saved item.
+ *
+ * @param viewModel Shared ViewModel.
+ * @param onDriverClick Callback to navigate to a driver detail screen.
+ * @param onConstructorClick Callback to navigate to a constructor detail screen.
+ */
 @Composable
 fun FavouriteScreen(
     viewModel: F1ViewModel,
@@ -103,6 +114,17 @@ fun FavouriteScreen(
     }
 }
 
+/**
+ * A single favourite item card (driver or constructor).
+ *
+ * Tapping the card opens the detail screen; tapping the heart icon
+ * removes the item from favourites.
+ *
+ * @param imageRes Resource ID of the image, or 0 if not available.
+ * @param name Display name of the item.
+ * @param onClick Callback invoked when the card is tapped.
+ * @param onRemove Callback invoked when the remove-from-favourites icon is tapped.
+ */
 @Composable
 fun FavouriteItem(
     imageRes: Int,

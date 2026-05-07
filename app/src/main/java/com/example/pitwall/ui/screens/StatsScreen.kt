@@ -37,6 +37,16 @@ import com.example.pitwall.R
 import com.example.pitwall.data.StandingItem
 import com.example.pitwall.viewmodel.F1ViewModel
 
+/**
+ * Statistics screen — drivers' standings and Constructors' Championship.
+ *
+ * Contains a [TabRow] with two tabs. Tapping an item navigates
+ * to the driver or constructor detail screen.
+ *
+ * @param viewModel Shared ViewModel.
+ * @param onDriverClick Callback invoked when a driver is tapped; receives driverId.
+ * @param onConstructorClick Callback invoked when a constructor is tapped; receives constructorId.
+ */
 @Composable
 fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConstructorClick: (String) -> Unit) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -75,6 +85,15 @@ fun StatsScreen(viewModel: F1ViewModel, onDriverClick: (String) -> Unit, onConst
     }
 }
 
+/**
+ * Standings list with progress bars.
+ *
+ * The progress bar shows each item's share of points relative to the leader.
+ * Tapping a card navigates to the detail of that item.
+ *
+ * @param items List of standings items.
+ * @param onItemClick Callback invoked on tap; receives the item's id.
+ */
 @Composable
 fun StandingsList(items: List<StandingItem>, onItemClick: (String) -> Unit) {
     val maxPoints =items.maxOfOrNull { it.points } ?: 0

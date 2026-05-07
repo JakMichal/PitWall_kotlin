@@ -39,6 +39,15 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/**
+ * Content of the ModalBottomSheet showing the detail of a selected race.
+ *
+ * If the race has finished and results are available, a "Results" tab is shown.
+ * The "Circuit" and "Schedule" tabs are always displayed.
+ *
+ * @param race The selected race.
+ * @param raceResult List of results from completed races.
+ */
 @Composable
 fun RaceDetailSheet(
     race: Race,
@@ -82,6 +91,11 @@ fun RaceDetailSheet(
     }
 }
 
+/**
+ * Tab showing the race results' leaderboard.
+ * Each row contains the driver name, team, points, and a progress bar.
+ * @param result Race results data.
+ */
 @Composable
 fun ResultDetailSheet(result: RaceResult) {
     val maxPoints = result.driverResults.maxOfOrNull { it.points } ?: 0
@@ -114,6 +128,12 @@ fun ResultDetailSheet(result: RaceResult) {
         }
     }
 }
+
+/**
+ * Tab showing circuit information: country, circuit name, circuit map,
+ * lap count, and circuit length.
+ * @param race Race containing the circuit data.
+ */
 @Composable
 fun CircuitDetailSheet(race: Race) {
     Column(
@@ -142,6 +162,12 @@ fun CircuitDetailSheet(race: Race) {
         }
     }
 }
+
+/**
+ * Tab showing the race weekend schedule (practices, qualifying, sprint, race).
+ * Sessions with null values (e.g. thirdPractice on a sprint weekend) are skipped.
+ * @param race Race containing the session data.
+ */
 @Composable
 fun ScheduleDetailSheet(race: Race) {
     Column(modifier = Modifier.padding(top = 8.dp)) {
@@ -154,6 +180,17 @@ fun ScheduleDetailSheet(race: Race) {
         SessionRow(stringResource(R.string.race), race.date, race.time)
     }
 }
+
+/**
+ * A single row in the weekend schedule — shows session name, date, and local time.
+ *
+ * Times from the API are in UTC. This function converts them to the device's local
+ * time zone using the same approach as [Race.getRaceDateTime].
+ *
+ * @param name Session name (e.g. "Qualifying").
+ * @param date Date in "yyyy-MM-dd" format.
+ * @param time Time string in UTC.
+ */
 @Composable
 fun SessionRow(name: String, date: String, time: String) {
     val fullTime = if (time.length < 8) "$time:00" else time
