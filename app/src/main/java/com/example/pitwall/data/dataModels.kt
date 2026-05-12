@@ -32,7 +32,6 @@ data class Driver(
     val points: Int,
     val wins: Int,
     val position: Int,
-    val isFavourite: Boolean = false,
     val image: Int
 ) {
     val fullName get() = "$firstName $lastName"
@@ -324,7 +323,6 @@ val constructorsPictures = mapOf(
     "alpine"         to R.drawable.alpine,
     "williams"       to R.drawable.williams,
     "haas"           to R.drawable.haas,
-    "audi"           to R.drawable.audi,
     "cadillac"       to R.drawable.cadillac,
     "audi"           to R.drawable.audi,
     "rb"             to R.drawable.racingbulls
